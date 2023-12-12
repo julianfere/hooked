@@ -28,4 +28,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: |
-          echo "//registry.yarnpkg.com/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+          echo "//registry.yarnpkg.com/:_authToken=${secrets.NPM_TOKEN}" > ~/.npmrc
