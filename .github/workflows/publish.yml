@@ -22,6 +22,8 @@ jobs:
         uses: changesets/action@v1
         with: 
           publish: yarn release
+          token: ${{ secrets.GITHUB_TOKEN }}
+          npmToken: ${{ secrets.NPM_TOKEN }}
       - run: |
           echo "//registry.yarnpkg.com/:_authToken=${NPM_TOKEN}" > ~/.npmrc
         env:
