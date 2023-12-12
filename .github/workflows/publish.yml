@@ -24,8 +24,8 @@ jobs:
           publish: yarn release
           token: ${{ secrets.GITHUB_TOKEN }}
           npmToken: ${{ secrets.NPM_TOKEN }}
-      - run: |
-          echo "//registry.yarnpkg.com/:_authToken=${NPM_TOKEN}" > ~/.npmrc
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - run: |
+          echo "//registry.yarnpkg.com/:_authToken=${NPM_TOKEN}" > ~/.npmrc
