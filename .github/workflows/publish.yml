@@ -15,17 +15,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '18.15.0'
-          registry-url: 'https://registry.yarnpkg.com'
-      - run: yarn install --frozen-lockfile
+      - run: npm install --frozen-lockfile
       - name: Create Release Pull Request or Publish
         id: changesets
         uses: changesets/action@v1
         with: 
-          publish: yarn release
+          publish: npm run release
           token: ${{ secrets.GITHUB_TOKEN }}
           npmToken: ${{ secrets.NPM_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - run: |
-          echo "//registry.yarnpkg.com/:_authToken=${secrets.NPM_TOKEN}" > ~/.npmrc
