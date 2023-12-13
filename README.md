@@ -18,46 +18,6 @@
   </p>
 </div>
 
-<style>
-
-  * {
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      box-sizing: border-box;
-  }
-
-  #table-of-content h2 {
-    margin-bottom: 0;
-  }
-
-  #table-of-content ul {
-    font-size: 1.2rem;
-    font-weight: bold;
-  }
-
-  .hook-link {}
-
-  .hook-container {
-    background-color: #fcfcfc;
-    padding: 0.5rem 1rem 1rem 1rem;
-  }
-
-  .hook-title {
-    margin: 0;
-    font-size: 2rem;
-  }
-
-  .hook-content {
-    margin-left: 1rem;
-  }
-
-  .hook-title-container {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-</style>
-
 <!-- TABLE OF CONTENTS -->
 <section id="table-of-content">
  <h2>Table of Contents</h2>
