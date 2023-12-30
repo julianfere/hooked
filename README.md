@@ -148,7 +148,7 @@ npm i @julianfere/react-utility-hooks
 <section id="useQueryParams">
   <section class="hook-title-container">
     <h2 id="useAsync" class="hook-title">useQueryParams</h2>
-    <a href="https://codesandbox.io/p/sandbox/demo-useasync-3g4gk4">🔍 Codesandbox demo</a>
+    <a href="https://codesandbox.io/p/sandbox/usequeryparams-deo-l4xysx">🔍 Codesandbox demo</a>
   </section>
   <h4>Overview</h4>
   <p>useQueryParams is a custom React hook designed to simplify the management of query parameters in React components. It provides a clean and consistent way to handle query parameters and their associated states.
