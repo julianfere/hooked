@@ -23,12 +23,16 @@ import {
 // const EventProvider = createEventProvider(EventContext);
 // const useEvents = createEventHook(EventContext);
 // Y ya queda listo el contexto con los eventos que se necesiten
-const createFactories = <T extends Record<string, any>>() => {
-  const createEventContext = <EventType extends IEventContext<T>>() => {
+const createFactories = <GenericEvents extends Record<string, any>>() => {
+  const createEventContext = <
+    EventType extends IEventContext<GenericEvents>
+  >() => {
     return createContext<EventType>({} as EventType);
   };
 
-  const createEventProvider = (context: Context<IEventContext<T>>) => {
+  const createEventProvider = (
+    context: Context<IEventContext<GenericEvents>>
+  ) => {
     return ({ children }: PropsWithChildren) => {
       const [subscriber, setSubscriber] = useState<ISubscriptions[]>([]);
 
@@ -36,14 +40,17 @@ const createFactories = <T extends Record<string, any>>() => {
         setSubscriber((prev) => prev.filter((sub) => sub.id !== id));
       };
 
-      const subscribe: SubscriptionHandler<T> = (eventName, callback) => {
+      const subscribe: SubscriptionHandler<GenericEvents> = (
+        eventName,
+        callback
+      ) => {
         const id = Math.random().toString(36);
         setSubscriber((prev) => [...prev, { id, eventName, callback }]);
 
         return () => unsubscribe(id);
       };
 
-      const publish: Publisher<T> = (eventName, data) => {
+      const publish: Publisher<GenericEvents> = (eventName, data) => {
         subscriber.forEach((sub) => {
           if (sub.eventName === eventName) {
             sub.callback(data);
@@ -60,7 +67,7 @@ const createFactories = <T extends Record<string, any>>() => {
     };
   };
 
-  const createEventHook = (context: Context<IEventContext<T>>) => {
+  const createEventHook = (context: Context<IEventContext<GenericEvents>>) => {
     return () => {
       if (!context) {
         throw new Error("useEvents must be used within a EventProvider");
