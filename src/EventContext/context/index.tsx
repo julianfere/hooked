@@ -12,17 +12,6 @@ import {
   IEventContext,
 } from "./types";
 
-// La funcion createFactories "crea" los factory functions que se van a utilizar en el contexto con el tipado correspondiente
-// Ejemplo:
-// type MyEvents = {
-//   event1: string;
-//   event2: number;
-// };
-// const { createEventContext, createEventProvider, createEventHook } = createFactories<MyEvents>();
-// const EventContext = createEventContext();
-// const EventProvider = createEventProvider(EventContext);
-// const useEvents = createEventHook(EventContext);
-// Y ya queda listo el contexto con los eventos que se necesiten
 const createFactories = <GenericEvents extends Record<string, any>>() => {
   const createEventContext = <
     EventType extends IEventContext<GenericEvents>
