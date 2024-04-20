@@ -1,3 +1,3 @@
-import { createFactories } from "./context";
+import { createFactories as factory } from "./context";
 
-export { createFactories };
+export { factory };

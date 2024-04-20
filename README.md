@@ -41,7 +41,12 @@
         <li><a href="#usedelay">useDelay</a></li>
         <li><a href="#usedocumenttitle">useDocumentTitle</a></li>
         <li><a href="#usequeryparams">useQueryParams</a></li>
-      </ul>
+      </ul >
+      <li><a href="">Hooks with context</a>
+        <ul id="context">
+          <li><a href="#eventcontext">EventContext</a></li>
+        </ul>
+      </li>
     </li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
@@ -541,6 +546,87 @@ useDocumentTitle(title, persistOnUnmount);
 
 `title`: The new title for the document.
 `persistOnUnmount`: (Optional) If set to true, the document title will persist after the component unmounts. Defaults to false.
+
+## EventContext
+
+<h4>Overview</h4>
+  <p>EventContext is a custom context with a generic type that allows you to create a global event emitter in your React application. It provides a clean and consistent way to handle global events and their associated states.
+  </p>
+<br/>
+
+<h4>Example</h4>
+
+```typescript
+import { factory } from "@julianfere/hooked/events";
+import { User, Post } from "./entitites";
+
+interface AppEvents {
+  userLoggedIn: User;
+  userLoggedOut: never;
+  postCreated: Post;
+}
+
+// this creates the factory for the context, provider, and hook with the specified events passed as a generic type
+const { createEventContext, createEventHook, createEventProvider } =
+  factory<AppEvents>();
+
+// this creates the context, provider, and hook with the specified events passed as a generic type
+
+const EventContext = createEventContext();
+const EventsProvider = createEventProvider(EventContext);
+export const useEvents = createEventHook(EventContext);
+
+const App = () => {
+  return (
+    <EventsProvider>
+      <UserComponent />
+      <PostComponent />
+    </EventsProvider>
+  );
+};
+
+const UserComponent = () => {
+  const { emit } = useEvents();
+
+  const handleLogin = (user: User) => {
+    emit("userLoggedIn", user);
+  };
+
+  const handleLogout = () => {
+    emit("userLoggedOut");
+  };
+
+  return (
+    <>
+      <button onClick={() => handleLogin({ name: "John Doe" })}>Login</button>
+      <button onClick={handleLogout}>Logout</button>
+    </>
+  );
+};
+```
+
+<h4>API</h4>
+
+```typescript
+const { createEventContext, createEventHook, createEventProvider } =
+  factory<AppEvents>();
+```
+
+`createEventContext`: A function that creates the context for the event emitter.
+`createEventHook`: A function that creates a hook for the event emitter.
+`createEventProvider`: A function that creates a provider for the event emitter.
+`factory`: A factory function that returns the createEventContext, createEventHook, and createEventProvider functions with the specified events passed as a generic type.
+
+<h4>Hook API</h4>
+
+```typescript
+const { subscribe, emit } = useEvents();
+```
+
+`subscribe`: A function for subscribing to an event. it takes the event name and a callback function as arguments. It will return a callback to unsubscribe from the event.
+`emit`: A function that emits an event. It takes the event name and as a second argument the payload matching the type of the context.
+
+<p align="right">(<a href="#hooks">back to hooks</a>)</p>
 
 <!-- CONTRIBUTING -->
 
