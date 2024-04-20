@@ -2,19 +2,19 @@
 
 <br />
 <div align="center">
-<h3 align="center">React Utility Hooks</h3>
+<h3 align="center">Hooked 🪝</h3>
 
   <p align="center">
     A type safe, functional, and easy to use utility library for React Hooks.
     <br />
-    <a href="https://github.com/julianfere/react-utility-hooks"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/julianfere/hooked"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/julianfere/react-utility-hooks">View Demo</a>
+    <a href="https://github.com/julianfere/hooked">View Demo</a>
     ·
-    <a href="https://github.com/julianfere/react-utility-hooks/issues">Report Bug</a>
+    <a href="https://github.com/julianfere/hooked/issues">Report Bug</a>
     ·
-    <a href="https://github.com/julianfere/react-utility-hooks/issues">Request Feature</a>
+    <a href="https://github.com/julianfere/hooked/issues">Request Feature</a>
   </p>
 </div>
 
@@ -174,6 +174,7 @@ type="text"
 value={value}
 onChange={(e) => setValue(e.target.value)}
 />
+
 <p>Debounced value: {debouncedValue}</p>
 </>
 );
@@ -220,6 +221,7 @@ type="text"
 value={value}
 onChange={(e) => setValue(e.target.value)}
 />
+
 <p>Throttled value: {throttledValue}</p>
 </>
 );
@@ -333,6 +335,7 @@ type="text"
 value={value}
 onChange={(e) => setValue(e.target.value)}
 />
+
 <p>Debounced value: {debouncedValue}</p>
 </>
 );
@@ -379,6 +382,7 @@ type="text"
 value={value}
 onChange={(e) => setValue(e.target.value)}
 />
+
 <p>Throttled value: {throttledValue}</p>
 </>
 );
@@ -567,6 +571,6 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 ## Contact
 
-Project Link: [https://github.com/julianfere/react-utility-hooks](https://github.com/julianfere/react-utility-hooks)
+Project Link: [https://github.com/julianfere/hooked](https://github.com/julianfere/hooked)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
