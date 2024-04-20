@@ -16,6 +16,11 @@
       "import": "./dist/events.mjs",
       "require": "./dist/events.js",
       "types": "./dist/events.d.ts"
+    },
+    "./authentication": {
+      "import": "./dist/authentication.mjs",
+      "require": "./dist/authentication.js",
+      "types": "./dist/authentication.d.ts"
     }
   },
   "publishConfig": {
