@@ -138,12 +138,17 @@ const { run, state } = useAsync(() => asyncFunction(), options);
 **Options**:
 
 `manual` (default: false): If set to true, the asynchronous function won't run automatically on component mount. You must call run manually. Otherwise, the asynchronous function will run automatically on component mount.
+
 `onSuccess`: A callback function that will be executed when the asynchronous function resolves successfully.
+
 `onError`: A callback function that will be executed when the asynchronous function encounters an error.
+
 `cancelable`: (default: true) If set to false, the asynchronous function will not be cancelable. If set to true, the asynchronous function will be cancelable. This means that if the component unmounts before the asynchronous function resolves, the asynchronous function will be canceled.
 
 **Returned Values**:
+
 `run`: A function that triggers the execution of the asynchronous function. If manual is set to true, this function will throw an error, reminding you to set manual to true.
+
 `state`: A string representing the current state of the asynchronous operation. Possible values are **idle**, **pending**, **fulfilled**, or **rejected**.
 
   </section>
@@ -158,7 +163,7 @@ const { run, state } = useAsync(() => asyncFunction(), options);
     </p>
   <br/>
 
-  <h4>Example</h4>
+<h4>Example</h4>
   
   
   ```typescript
@@ -167,22 +172,22 @@ import React, { useState } from "react";
 import { useDebounce } from "@hooks";
 
 const BasicExample = () => {
-const [value, setValue] = useState("");
-const debouncedValue = useDebounce(value, 500);
+  const [value, setValue] = useState("");
+  const debouncedValue = useDebounce(value, 500);
 
-useEffect(() => { makeApiCall(debouncedValue); }, [debouncedValue]);
+  useEffect(() => { makeApiCall(debouncedValue); }, [debouncedValue]);
 
-return (
-<>
-<input
-type="text"
-value={value}
-onChange={(e) => setValue(e.target.value)}
-/>
+  return (
+    <>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+      />
 
-<p>Debounced value: {debouncedValue}</p>
-</>
-);
+      <p>Debounced value: {debouncedValue}</p>
+    </>
+  );
 };
 
 ````
@@ -190,11 +195,11 @@ onChange={(e) => setValue(e.target.value)}
 <h4>API</h4>
 
 ```typescript
-
 const debouncedValue = useDebounce(value, delay);
 ````
 
 `value`: The value to be debounced.
+
 `delay`: The delay in milliseconds to wait before updating the debounced value. Defaults to 500ms.
 
 <p align="right">(<a href="#hooks">back to hooks</a>)</p>
@@ -214,22 +219,21 @@ import React, { useState } from "react";
 import { useThrottle } from "@hooks";
 
 const BasicExample = () => {
-const [value, setValue] = useState("");
-const throttledValue = useThrottle(value, 500);
+    const [value, setValue] = useState("");
+    const throttledValue = useThrottle(value, 500);
 
-useEffect(() => { makeApiCall(throttledValue); }, [throttledValue]);
+    useEffect(() => { makeApiCall(throttledValue); }, [throttledValue]);
 
-return (
-<>
-<input
-type="text"
-value={value}
-onChange={(e) => setValue(e.target.value)}
-/>
-
-<p>Throttled value: {throttledValue}</p>
-</>
-);
+    return (
+      <>
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+        />
+        <p>Throttled value: {throttledValue}</p>
+      </>
+    );
 };
 
 ````
@@ -237,11 +241,11 @@ onChange={(e) => setValue(e.target.value)}
 <h4>API</h4>
 
 ```typescript
-
 const throttledValue = useThrottle(value, delay);
 ````
 
 `value`: The value to be throttled.
+
 `delay`: The delay in milliseconds to wait before updating the throttled value. Defaults to 500ms.
 
 <p align="right">(<a href="#hooks">back to hooks</a>)</p>
@@ -256,7 +260,7 @@ const throttledValue = useThrottle(value, delay);
   <h4>Example</h4>
   
   ```typescript
-  import { useLocalStorage } from "@hooks";
+import { useLocalStorage } from "@hooks";
 
 type UseLocalStorageType = {
 name: string;
@@ -264,9 +268,9 @@ age: number;
 }
 
 const BasicExample = () => {
-const { getItem, setItem, removeItem, hasItem, clear } = useLocalStorage<UseLocalStorageType>();
-const [key, setKey] = useState("");
-const [value, setValue] = useState("");
+    const { getItem, setItem, removeItem, hasItem, clear } = useLocalStorage<UseLocalStorageType>();
+    const [key, setKey] = useState("");
+    const [value, setValue] = useState("");
 
     return (
       <>
@@ -276,9 +280,8 @@ const [value, setValue] = useState("");
         <button onClick={() => setItem(key, value)}>Set Item</button>
         <button onClick={() => removeItem(key)}>Remove Item</button>
         <button onClick={() => clear()}>Clear</button>
-      </input>
+      </>
     );
-
 };
 
 ````
@@ -310,52 +313,29 @@ const { getItem, setItem, removeItem, hasItem, clear } = useLocalStorage<T>();
   <h4>Example</h4>
   
   ```typescript
-  import {useDelay} from "@hooks";
+import {useDelay} from "@hooks";
 
 const BasicExample = () => {
-const [value, setValue] = useState("");
+    const [value, setValue] = useState("");
 
-    const updateValue = (val: string)=> {
-      setValue(val);
-    }
+    const updateValue = (val: string) => setValue(val)
 
     useDelay(() => updateValue("Delayed value"));
 
     const runDelay = useDelay(() => updateValue("Manual value"), {manual: true, delay: 1000});
 
-import React, { useState } from "react";
-
-import { useDebounce } from "@hooks";
-
-const BasicExample = () => {
-const [value, setValue] = useState("");
-const debouncedValue = useDebounce(value, 500);
-
-useEffect(() => { makeApiCall(debouncedValue); }, [debouncedValue]);
-
-return (
-<>
-<input
-type="text"
-value={value}
-onChange={(e) => setValue(e.target.value)}
-/>
-
-<p>Debounced value: {debouncedValue}</p>
-</>
-);
-};
-
-````
+    return <h1>Delayed Value: {value}</h1>
+}
+```
 
 <h4>API</h4>
 
 ```typescript
-
 const debouncedValue = useDebounce(value, delay);
 ````
 
 `value`: The value to be debounced.
+
 `delay`: The delay in milliseconds to wait before updating the debounced value. Defaults to 500ms.
 
 <p align="right">(<a href="#hooks">back to hooks</a>)</p>
@@ -375,22 +355,21 @@ import React, { useState } from "react";
 import { useThrottle } from "@hooks";
 
 const BasicExample = () => {
-const [value, setValue] = useState("");
-const throttledValue = useThrottle(value, 500);
+    const [value, setValue] = useState("");
+    const throttledValue = useThrottle(value, 500);
 
-useEffect(() => { makeApiCall(throttledValue); }, [throttledValue]);
+    useEffect(() => { makeApiCall(throttledValue); }, [throttledValue]);
 
-return (
-<>
-<input
-type="text"
-value={value}
-onChange={(e) => setValue(e.target.value)}
-/>
-
-<p>Throttled value: {throttledValue}</p>
-</>
-);
+    return (
+      <>
+        <input
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        />
+        <p>Throttled value: {throttledValue}</p>
+      </>
+    );
 };
 
 ````
@@ -398,11 +377,11 @@ onChange={(e) => setValue(e.target.value)}
 <h4>API</h4>
 
 ```typescript
-
 const throttledValue = useThrottle(value, delay);
 ````
 
 `value`: The value to be throttled.
+
 `delay`: The delay in milliseconds to wait before updating the throttled value. Defaults to 500ms.
 
 <p align="right">(<a href="#hooks">back to hooks</a>)</p>
@@ -417,17 +396,17 @@ const throttledValue = useThrottle(value, delay);
   <h4>Example</h4>
   
   ```typescript
-  import { useLocalStorage } from "@hooks";
+import { useLocalStorage } from "@hooks";
 
 type UseLocalStorageType = {
-name: string;
-age: number;
+  name: string;
+  age: number;
 }
 
 const BasicExample = () => {
-const { getItem, setItem, removeItem, hasItem, clear } = useLocalStorage<UseLocalStorageType>();
-const [key, setKey] = useState("");
-const [value, setValue] = useState("");
+    const { getItem, setItem, removeItem, hasItem, clear } = useLocalStorage<UseLocalStorageType>();
+    const [key, setKey] = useState("");
+    const [value, setValue] = useState("");
 
     return (
       <>
@@ -439,7 +418,6 @@ const [value, setValue] = useState("");
         <button onClick={() => clear()}>Clear</button>
       </input>
     );
-
 };
 
 ````
@@ -454,9 +432,13 @@ const { getItem, setItem, removeItem, hasItem, clear } = useLocalStorage<T>();
 
 **Returned Values**:
 `getItem`: A function that retrieves the value associated with the specified key from local storage.
+
 `setItem`: A function that stores the specified value in local storage, associated with the specified key.
+
 `removeItem`: A function that removes the specified key and its associated value from local storage.
+
 `hasItem`: A function that returns true if the specified key exists in local storage, and false otherwise.
+
 `clear`: A function that removes all keys and their associated values from local storage.
 
 <p align="right">(<a href="#hooks">back to hooks</a>)</p>
@@ -613,9 +595,13 @@ const { createEventContext, createEventHook, createEventProvider } =
 ```
 
 `createEventContext`: A function that creates the context for the event emitter.
+
 `createEventHook`: A function that creates a hook for the event emitter.
+
 `createEventProvider`: A function that creates a provider for the event emitter.
-`factory`: A factory function that returns the createEventContext, createEventHook, and createEventProvider functions with the specified events passed as a generic type.
+
+`factory`: A factory function that returns the createEventContext, createEventHook, and 
+createEventProvider functions with the specified events passed as a generic type.
 
 <h4>Hook API</h4>
 
