@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { defaultOptions, getRunner, handleError } from "./utils";
+import { defaultOptions, handleError } from "./utils";
 import { AsyncStatus, UseAsyncOptions } from "./types";
 
 /**
@@ -84,7 +84,7 @@ const useAsync = <
   }, []);
 
   return {
-    run: options.manual ? getRunner(runner)(fn) : autoRunner,
+    run: options.manual ? (...args: Parameters<F>) => runner(...args) : autoRunner,
     state,
   };
 };

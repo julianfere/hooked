@@ -115,6 +115,22 @@ describe("useAsync", () => {
     expect(onSuccessV2).toHaveBeenCalledWith("data");
   });
 
+  it("should not call onSuccess after unmount", async () => {
+    const onSuccess = vi.fn();
+
+    const { unmount } = renderHook(() =>
+      useAsync(() => Promise.resolve("data"), { onSuccess, manual: true })
+    );
+
+    unmount();
+
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(onSuccess).not.toHaveBeenCalled();
+  });
+
   it("should call the onError handler when the async function rejects", async () => {
     const asyncFunction = () => Promise.reject("Error");
     const onError = vi.fn();
