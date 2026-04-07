@@ -61,6 +61,24 @@ describe("useDelay", () => {
     expect(callback).not.toHaveBeenCalled();
   });
 
+  it("should not re-run when an inline callback reference changes between renders", async () => {
+    let callCount = 0;
+
+    const { rerender } = renderHook(() =>
+      useDelay(() => { callCount++; }, { delay: 250 })
+    );
+
+    // Rerender multiple times — each rerender creates a new inline function
+    rerender();
+    rerender();
+    rerender();
+
+    act(() => { vi.advanceTimersByTime(250); });
+
+    // Should only run once (from initial mount), not once per rerender
+    expect(callCount).toBe(1);
+  });
+
   it("should return a runner function if manual is true", async () => {
     const callback = vi.fn();
     const { result } = renderHook(() => useDelay(callback, { manual: true }));

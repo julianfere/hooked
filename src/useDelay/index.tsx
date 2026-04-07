@@ -13,9 +13,14 @@ const useDelay = (
 ) => {
   const { delay = 250, manual = false } = options;
   const mountedRef = useRef(false);
+  const callbackRef = useRef(callback);
+  useEffect(() => { callbackRef.current = callback; });
 
   const runner = () => {
-    if (mountedRef.current) setTimeout(callback, delay);
+    if (mountedRef.current) {
+      const id = setTimeout(() => callbackRef.current(), delay);
+      return () => clearTimeout(id);
+    }
   };
 
   useEffect(() => {
@@ -23,13 +28,13 @@ const useDelay = (
 
     if (manual) return;
 
-    const timer = setTimeout(callback, delay);
+    const timer = setTimeout(() => callbackRef.current(), delay);
 
     return () => {
       clearTimeout(timer);
       mountedRef.current = false;
     };
-  }, [callback, delay, manual]);
+  }, [delay, manual]);
 
   return manual ? runner : () => {};
 };

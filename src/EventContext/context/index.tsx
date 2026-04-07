@@ -3,7 +3,7 @@ import {
   PropsWithChildren,
   createContext,
   useContext,
-  useState,
+  useRef,
 } from "react";
 import {
   ISubscriptions,
@@ -23,24 +23,29 @@ const createFactories = <GenericEvents extends Record<string, any>>() => {
     context: Context<IEventContext<GenericEvents>>
   ) => {
     return ({ children }: PropsWithChildren) => {
-      const [subscriber, setSubscriber] = useState<ISubscriptions[]>([]);
+      const subscriberRef = useRef<ISubscriptions[]>([]);
 
       const unsubscribe = (id: string) => {
-        setSubscriber((prev) => prev.filter((sub) => sub.id !== id));
+        subscriberRef.current = subscriberRef.current.filter(
+          (sub) => sub.id !== id
+        );
       };
 
       const subscribe: SubscriptionHandler<GenericEvents> = (
         eventName,
         callback
       ) => {
-        const id = Math.random().toString(36);
-        setSubscriber((prev) => [...prev, { id, eventName, callback }]);
+        const id = crypto.randomUUID();
+        subscriberRef.current = [
+          ...subscriberRef.current,
+          { id, eventName, callback },
+        ];
 
         return () => unsubscribe(id);
       };
 
       const publish: Publisher<GenericEvents> = (eventName, data) => {
-        subscriber.forEach((sub) => {
+        subscriberRef.current.forEach((sub) => {
           if (sub.eventName === eventName) {
             sub.callback(data);
           }

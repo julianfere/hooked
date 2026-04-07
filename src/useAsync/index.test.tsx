@@ -70,7 +70,7 @@ describe("useAsync", () => {
     );
 
     expect(() => result.current.run("test")).toThrowError(
-      "You must set manual to true to use the run function"
+      "run() is only available when the manual option is set to true"
     );
   });
 
@@ -92,6 +92,27 @@ describe("useAsync", () => {
 
     expect(onSuccess).toBeCalledWith("Success");
     expect(result.current.state).toBe("fulfilled");
+  });
+
+  it("should call the latest onSuccess callback even after rerender", async () => {
+    const onSuccessV1 = vi.fn();
+    const onSuccessV2 = vi.fn();
+
+    const { rerender, result } = renderHook(
+      ({ cb }) =>
+        useAsync(() => Promise.resolve("data"), { onSuccess: cb, manual: true }),
+      { initialProps: { cb: onSuccessV1 } }
+    );
+
+    rerender({ cb: onSuccessV2 });
+
+    await act(async () => {
+      result.current.run();
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(onSuccessV1).not.toHaveBeenCalled();
+    expect(onSuccessV2).toHaveBeenCalledWith("data");
   });
 
   it("should call the onError handler when the async function rejects", async () => {

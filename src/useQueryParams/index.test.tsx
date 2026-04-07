@@ -113,6 +113,26 @@ describe("useQueryParams", () => {
 
       expectTypeOf(params).toEqualTypeOf<Partial<TestQueryParamsWithArray>>();
     });
+
+    it("should correctly parse falsy JSON values (0, false, null)", () => {
+      interface FalsyParams {
+        zero: number;
+        flag: boolean;
+        empty: null;
+      }
+
+      Object.defineProperty(window, "location", {
+        value: { search: "?zero=0&flag=false&empty=null" },
+      });
+
+      const { result } = renderHook(() => useQueryParams<FalsyParams>());
+
+      const params = result.current.get("zero", "flag", "empty");
+
+      expect(params.zero).toBe(0);
+      expect(params.flag).toBe(false);
+      expect(params.empty).toBe(null);
+    });
   });
 
   describe("set", () => {
