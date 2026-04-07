@@ -21,8 +21,7 @@ jobs:
         uses: changesets/action@v1
         with:
           publish: npm run release
-          token: ${{ secrets.GH_TOKEN }}
-          npmToken: ${{ secrets.NPM_TOKEN }}
+          github-token: ${{ secrets.GH_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
