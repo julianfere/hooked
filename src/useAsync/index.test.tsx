@@ -13,101 +13,177 @@ describe("useAsync", () => {
     vi.restoreAllMocks();
   });
 
-  it("return runner and state", () => {
-    const asyncFunction = (arg: string) => Promise.resolve(arg);
-
+  it("returns trigger, reset, status, data, error and loading", () => {
     const { result } = renderHook(() =>
-      useAsync((arg: string) => asyncFunction(arg))
+      useAsync((arg: string) => Promise.resolve(arg))
     );
 
-    expect(result.current.run).toBeDefined();
-    expect(result.current.state).toBeDefined();
+    expect(result.current.trigger).toBeInstanceOf(Function);
+    expect(result.current.reset).toBeInstanceOf(Function);
+    expect(result.current.status).toBe("idle");
+    expect(result.current.data).toBeUndefined();
+    expect(result.current.error).toBeUndefined();
+    expect(result.current.loading).toBe(false);
   });
 
-  it("should return idle when manual is true and the runner is not called", async () => {
-    const asyncFunction = (arg: string) => Promise.resolve(arg);
-
+  it("starts in idle state", () => {
     const { result } = renderHook(() =>
-      useAsync((arg: string) => asyncFunction(arg), { manual: true })
+      useAsync((arg: string) => Promise.resolve(arg))
     );
 
-    expect(result.current.state).toBe("idle");
+    expect(result.current.status).toBe("idle");
   });
 
-  it("should trun the async function and return the correct status", async () => {
+  it("transitions to pending while running", async () => {
     const asyncFunction = (arg: string) =>
       new Promise<string>((resolve) => setTimeout(() => resolve(arg), 1000));
 
-    const { result } = renderHook(() =>
-      useAsync((arg: string) => asyncFunction(arg), { manual: true })
-    );
+    const { result } = renderHook(() => useAsync(asyncFunction));
 
     await act(async () => {
-      result.current.run("test");
+      result.current.trigger("test");
+    });
+
+    expect(result.current.status).toBe("pending");
+    expect(result.current.loading).toBe(true);
+  });
+
+  it("transitions to fulfilled and exposes data", async () => {
+    const asyncFunction = (arg: string) =>
+      new Promise<string>((resolve) => setTimeout(() => resolve(arg), 1000));
+
+    const { result } = renderHook(() => useAsync(asyncFunction));
+
+    await act(async () => {
+      result.current.trigger("hello");
       vi.advanceTimersByTime(1000);
     });
-    expect(result.current.state).toBe("fulfilled");
+
+    expect(result.current.status).toBe("fulfilled");
+    expect(result.current.data).toBe("hello");
+    expect(result.current.error).toBeUndefined();
+    expect(result.current.loading).toBe(false);
   });
 
-  it('should return "pending" when the async function is running', async () => {
-    const asyncFunction = (arg: string) =>
-      new Promise<string>((resolve) => setTimeout(() => resolve(arg), 1000));
+  it("transitions to rejected and exposes error", async () => {
+    const asyncFunction = () => Promise.reject(new Error("boom"));
 
-    const { result } = renderHook(() =>
-      useAsync((arg: string) => asyncFunction(arg), { manual: true })
-    );
+    const { result } = renderHook(() => useAsync(asyncFunction));
+
     await act(async () => {
-      result.current.run("test");
+      result.current.trigger();
+      vi.advanceTimersByTime(1000);
     });
-    expect(result.current.state).toBe("pending");
+
+    expect(result.current.status).toBe("rejected");
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect((result.current.error as Error).message).toBe("boom");
+    expect(result.current.data).toBeUndefined();
+    expect(result.current.loading).toBe(false);
   });
 
-  it("should throw an error when the runner is called and manual is false", () => {
-    const asyncFunction = (arg: string) => Promise.resolve(arg);
+  it("resets back to idle state", async () => {
+    const asyncFunction = () => Promise.resolve("data");
+
+    const { result } = renderHook(() => useAsync(asyncFunction));
+
+    await act(async () => {
+      result.current.trigger();
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(result.current.status).toBe("fulfilled");
+
+    act(() => result.current.reset());
+
+    expect(result.current.status).toBe("idle");
+    expect(result.current.data).toBeUndefined();
+    expect(result.current.error).toBeUndefined();
+  });
+
+  it("cancels a previous in-flight request when trigger is called again", async () => {
+    let callCount = 0;
+    const asyncFunction = () =>
+      new Promise<number>((resolve) =>
+        setTimeout(() => resolve(++callCount), 1000)
+      );
+
+    const { result } = renderHook(() => useAsync(asyncFunction));
+
+    await act(async () => {
+      result.current.trigger(); // first call
+    });
+
+    await act(async () => {
+      result.current.trigger(); // cancels first, starts second
+      vi.advanceTimersByTime(1000);
+    });
+
+    // Only the second result should land
+    expect(result.current.status).toBe("fulfilled");
+    expect(result.current.data).toBe(2);
+  });
+
+  it("runs automatically on mount when immediate is true", async () => {
+    const asyncFunction = () => Promise.resolve("auto");
 
     const { result } = renderHook(() =>
-      useAsync((arg: string) => asyncFunction(arg))
+      useAsync(asyncFunction, { immediate: true })
     );
 
-    expect(() => result.current.run("test")).toThrowError(
-      "run() is only available when the manual option is set to true"
-    );
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(result.current.status).toBe("fulfilled");
+    expect(result.current.data).toBe("auto");
   });
 
-  it("should call the onSuccess handler when the async function resolves", async () => {
-    const asyncFunction = () => Promise.resolve("Success");
+  it("calls onSuccess with the result", async () => {
     const onSuccess = vi.fn();
+    const asyncFunction = () => Promise.resolve("value");
 
     const { result } = renderHook(() =>
-      useAsync(() => asyncFunction(), {
-        onSuccess: (data) => onSuccess(data),
-        manual: true,
-      })
+      useAsync(asyncFunction, { onSuccess })
     );
 
     await act(async () => {
-      result.current.run();
+      result.current.trigger();
       vi.advanceTimersByTime(1000);
     });
 
-    expect(onSuccess).toBeCalledWith("Success");
-    expect(result.current.state).toBe("fulfilled");
+    expect(onSuccess).toHaveBeenCalledWith("value");
   });
 
-  it("should call the latest onSuccess callback even after rerender", async () => {
+  it("calls onError with the thrown error", async () => {
+    const onError = vi.fn();
+    const asyncFunction = () => Promise.reject("oops");
+
+    const { result } = renderHook(() =>
+      useAsync(asyncFunction, { onError })
+    );
+
+    await act(async () => {
+      result.current.trigger();
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(onError).toHaveBeenCalledWith("oops");
+  });
+
+  it("calls the latest onSuccess callback after a rerender", async () => {
     const onSuccessV1 = vi.fn();
     const onSuccessV2 = vi.fn();
 
-    const { rerender, result } = renderHook(
-      ({ cb }) =>
-        useAsync(() => Promise.resolve("data"), { onSuccess: cb, manual: true }),
+    const { result, rerender } = renderHook(
+      ({ cb }) => useAsync(() => Promise.resolve("data"), { onSuccess: cb }),
       { initialProps: { cb: onSuccessV1 } }
     );
 
     rerender({ cb: onSuccessV2 });
 
     await act(async () => {
-      result.current.run();
+      result.current.trigger();
       vi.advanceTimersByTime(1000);
     });
 
@@ -115,11 +191,11 @@ describe("useAsync", () => {
     expect(onSuccessV2).toHaveBeenCalledWith("data");
   });
 
-  it("should not call onSuccess after unmount", async () => {
+  it("does not call onSuccess after unmount", async () => {
     const onSuccess = vi.fn();
 
     const { unmount } = renderHook(() =>
-      useAsync(() => Promise.resolve("data"), { onSuccess, manual: true })
+      useAsync(() => Promise.resolve("data"), { onSuccess })
     );
 
     unmount();
@@ -129,25 +205,5 @@ describe("useAsync", () => {
     });
 
     expect(onSuccess).not.toHaveBeenCalled();
-  });
-
-  it("should call the onError handler when the async function rejects", async () => {
-    const asyncFunction = () => Promise.reject("Error");
-    const onError = vi.fn();
-
-    const { result } = renderHook(() =>
-      useAsync(() => asyncFunction(), {
-        onError: (error) => onError(error),
-        manual: true,
-      })
-    );
-
-    await act(async () => {
-      result.current.run();
-      vi.advanceTimersByTime(1000);
-    });
-
-    expect(onError).toBeCalledWith("Error");
-    expect(result.current.state).toBe("rejected");
   });
 });

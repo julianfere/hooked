@@ -1,28 +1,30 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { defaultOptions, handleError } from "./utils";
-import { AsyncStatus, UseAsyncOptions } from "./types";
+import { useCallback, useEffect, useReducer, useRef } from "react";
+import { asyncReducer, getInitialState } from "./utils";
+import { UseAsyncOptions } from "./types";
 
 /**
- *  The useAsync hook is a custom hook that allows you to run an async function and get the status of the promise.
- * @param fn - The async function to run.
- * @param options - The options for the hook.
- * @returns An object with the run function and the status of the promise.
+ * useAsync manages the full lifecycle of an async function: idle → pending → fulfilled | rejected.
+ *
+ * @param fn - The async function to run. Receives an AbortSignal as the last argument.
+ * @param options - Optional configuration.
+ * @returns `{ trigger, reset, status, data, error, loading }`
+ *
  * @example
- * const asyncFunction = (arg: string) => Promise.resolve(arg);
- * const { run, state } = useAsync((arg: string) => asyncFunction(arg), {manual: true});
+ * const { trigger, data, error, loading } = useAsync(fetchUser);
+ * // trigger(userId) to run manually
  *
- * const handleClick = () => run('test');
- *
+ * @example
+ * // Run on mount (fn must take no required arguments)
+ * const { data, loading } = useAsync(fetchConfig, { immediate: true });
  */
 const useAsync = <
   F extends (...args: any[]) => Promise<any>,
   T = Awaited<ReturnType<F>>
 >(
   fn: F,
-  options: UseAsyncOptions<T> = defaultOptions<T>()
+  options: UseAsyncOptions<T> = {}
 ) => {
-  const [state, setState] = useState<AsyncStatus>(AsyncStatus.Idle);
-  const isMounted = useRef(false);
+  const [state, dispatch] = useReducer(asyncReducer<T>, getInitialState<T>());
   const controllerRef = useRef<AbortController | null>(null);
 
   const fnRef = useRef(fn);
@@ -31,61 +33,52 @@ const useAsync = <
   const optionsRef = useRef(options);
   useEffect(() => { optionsRef.current = options; });
 
-  const runner = useCallback(
-    async (...args: any[]) => {
-      setState(AsyncStatus.Pending);
-      try {
-        const result = await fnRef.current(...args, {
-          signal: controllerRef?.current!.signal,
-        });
+  const trigger = useCallback(async (...args: Parameters<F>) => {
+    // Cancel any in-flight request before starting a new one
+    controllerRef.current?.abort();
+    const controller = new AbortController();
+    controllerRef.current = controller;
 
-        if (!isMounted.current) return;
+    dispatch({ type: "pending" });
 
-        setState(AsyncStatus.Fulfilled);
-        optionsRef.current.onSuccess?.(result);
-      } catch (error) {
-        setState(AsyncStatus.Rejected);
-        optionsRef.current.onError?.(error);
-      }
-    },
-    []
-  );
+    try {
+      const result = await fnRef.current(...args, { signal: controller.signal });
 
-  const autoRunner = (..._args: any[]) => {
-    throw new Error("run() is only available when the manual option is set to true");
-  };
+      if (controller.signal.aborted) return;
+
+      dispatch({ type: "fulfilled", payload: result });
+      optionsRef.current.onSuccess?.(result);
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      dispatch({ type: "rejected", payload: error });
+      optionsRef.current.onError?.(error);
+    }
+  }, []);
+
+  const reset = useCallback(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = null;
+    dispatch({ type: "reset" });
+  }, []);
 
   useEffect(() => {
-    if (controllerRef.current == null)
-      controllerRef.current = new AbortController();
-    const controller = controllerRef.current;
-
-    isMounted.current = true;
-
-    if (options.manual) return;
-
-    runner();
+    if (options.immediate) {
+      trigger(...([] as unknown as Parameters<F>));
+    }
 
     return () => {
-      isMounted.current = false;
-      // Pospone la cancelacion de la request hasta el proximo render
-      // es para evitar que el Strict Mode cancele todo en las 2 ejecuciones del efecto
-      requestAnimationFrame(() => {
-        try {
-          if (optionsRef.current.cancelable && !isMounted.current) {
-            controller.abort();
-          }
-        } catch (e: unknown) {
-          handleError(e);
-        }
-      });
+      controllerRef.current?.abort();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {
-    run: options.manual ? (...args: Parameters<F>) => runner(...args) : autoRunner,
-    state,
+    trigger,
+    reset,
+    status: state.status,
+    data: state.data,
+    error: state.error,
+    loading: state.status === "pending",
   };
 };
 
