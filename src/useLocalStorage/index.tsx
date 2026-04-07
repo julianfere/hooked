@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { UnsuportedClient } from "./Errors";
 
 /**
@@ -13,11 +13,11 @@ import { UnsuportedClient } from "./Errors";
  *
  */
 const useLocalStorage = <Type extends Record<string, any>>() => {
-  const storageRef = useRef(window?.localStorage);
+  if (typeof window === "undefined" || !window.localStorage) {
+    throw new UnsuportedClient();
+  }
 
-  useEffect(() => {
-    if (!storageRef.current) throw new UnsuportedClient();
-  }, []);
+  const storageRef = useRef(window.localStorage);
 
   const getItem = <Key extends keyof Type>(key: Key) => {
     const returnedItem = storageRef.current.getItem(key as string);
