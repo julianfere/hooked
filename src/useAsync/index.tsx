@@ -25,28 +25,34 @@ const useAsync = <
   const isMounted = useRef(false);
   const controllerRef = useRef<AbortController | null>(null);
 
+  const fnRef = useRef(fn);
+  useEffect(() => { fnRef.current = fn; });
+
+  const optionsRef = useRef(options);
+  useEffect(() => { optionsRef.current = options; });
+
   const runner = useCallback(
     async (...args: any[]) => {
       setState(AsyncStatus.Pending);
       try {
-        const result = await fn(...args, {
+        const result = await fnRef.current(...args, {
           signal: controllerRef?.current!.signal,
         });
 
-        if (!isMounted) return;
+        if (!isMounted.current) return;
 
         setState(AsyncStatus.Fulfilled);
-        options.onSuccess?.(result);
+        optionsRef.current.onSuccess?.(result);
       } catch (error) {
         setState(AsyncStatus.Rejected);
-        options.onError?.(error);
+        optionsRef.current.onError?.(error);
       }
     },
-    [fn, isMounted, options]
+    []
   );
 
   const autoRunner = (..._args: any[]) => {
-    throw new Error("You must set manual to true to use the run function");
+    throw new Error("run() is only available when the manual option is set to true");
   };
 
   useEffect(() => {
@@ -66,7 +72,7 @@ const useAsync = <
       // es para evitar que el Strict Mode cancele todo en las 2 ejecuciones del efecto
       requestAnimationFrame(() => {
         try {
-          if (options.cancelable && !isMounted.current) {
+          if (optionsRef.current.cancelable && !isMounted.current) {
             controller.abort();
           }
         } catch (e: unknown) {

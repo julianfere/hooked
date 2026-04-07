@@ -1,17 +1,11 @@
 export const castValue = <T>(value: string) => {
-  let castedValue;
-
-  if (value === "true") castedValue = true;
-  if (value === "false") castedValue = false;
-  if (value === "null") castedValue = null;
-  if (value === "undefined") castedValue = undefined;
-  if (value === "") castedValue = undefined;
-
+  if (value === "true") return true as T;
+  if (value === "false") return false as T;
+  if (value === "null") return null as T;
+  if (value === "undefined" || value === "") return undefined as T;
+  if (!isNaN(Number(value))) return Number(value) as T;
   try {
-    if (JSON.parse(value)) castedValue = JSON.parse(value);
+    return JSON.parse(value) as T;
   } catch (e) {}
-
-  if (!isNaN(Number(value))) castedValue = Number(value);
-
-  return (castedValue ?? value) as T;
+  return value as T;
 };
