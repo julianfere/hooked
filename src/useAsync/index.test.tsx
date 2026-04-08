@@ -35,7 +35,7 @@ describe("useAsync", () => {
   });
 
   it("transitions to pending while running", async () => {
-    const asyncFunction = (arg: string) =>
+    const asyncFunction = (arg: string, _signal?: AbortSignal) =>
       new Promise<string>((resolve) => setTimeout(() => resolve(arg), 1000));
 
     const { result } = renderHook(() => useAsync(asyncFunction));
@@ -49,7 +49,7 @@ describe("useAsync", () => {
   });
 
   it("transitions to fulfilled and exposes data", async () => {
-    const asyncFunction = (arg: string) =>
+    const asyncFunction = (arg: string, _signal?: AbortSignal) =>
       new Promise<string>((resolve) => setTimeout(() => resolve(arg), 1000));
 
     const { result } = renderHook(() => useAsync(asyncFunction));
@@ -193,7 +193,7 @@ describe("useAsync", () => {
 
   it("passes an AbortSignal (not a wrapped object) as the last argument", async () => {
     let receivedSignal: unknown;
-    const asyncFunction = (signal: unknown) => {
+    const asyncFunction = (signal: AbortSignal) => {
       receivedSignal = signal;
       return Promise.resolve("ok");
     };
@@ -206,6 +206,64 @@ describe("useAsync", () => {
     });
 
     expect(receivedSignal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("passes user args before the AbortSignal", async () => {
+    let receivedArgs: unknown[] = [];
+    const asyncFunction = (a: string, b: number, signal: AbortSignal) => {
+      receivedArgs = [a, b, signal];
+      return Promise.resolve("ok");
+    };
+
+    const { result } = renderHook(() => useAsync(asyncFunction));
+
+    await act(async () => {
+      result.current.trigger("hello", 42);
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(receivedArgs[0]).toBe("hello");
+    expect(receivedArgs[1]).toBe(42);
+    expect(receivedArgs[2]).toBeInstanceOf(AbortSignal);
+  });
+
+  it("trigger() accepts no args when fn only takes a signal", async () => {
+    // This is the pattern from the docs: (signal: AbortSignal) => fetch(url, { signal })
+    // trigger() should be callable with no arguments
+    const asyncFunction = (signal: AbortSignal) =>
+      Promise.resolve(signal instanceof AbortSignal ? "ok" : "bad");
+
+    const { result } = renderHook(() => useAsync(asyncFunction));
+
+    await act(async () => {
+      result.current.trigger(); // must compile and run without error
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(result.current.status).toBe("fulfilled");
+    expect(result.current.data).toBe("ok");
+  });
+
+  it("aborts the in-flight request when the signal is aborted", async () => {
+    let aborted = false;
+    const asyncFunction = (signal: AbortSignal) =>
+      new Promise<string>((resolve, reject) => {
+        signal.addEventListener("abort", () => {
+          aborted = true;
+          reject(new DOMException("Aborted", "AbortError"));
+        });
+        setTimeout(() => resolve("done"), 2000);
+      });
+
+    const { result } = renderHook(() => useAsync(asyncFunction));
+
+    await act(async () => {
+      result.current.trigger();
+    });
+
+    act(() => result.current.reset());
+
+    expect(aborted).toBe(true);
   });
 
   it("does not call onSuccess after unmount", async () => {
