@@ -32,7 +32,9 @@
     "ci": "yarn lint && yarn test && yarn build",
     "release": "yarn lint && yarn test && yarn build && changeset publish",
     "docs:dev": "cd docs && npm run start",
-    "docs:build": "cd docs && npm run build"
+    "docs:build": "cd docs && npm run build",
+    "playground": "npm run build && cd playground && npm run dev",
+    "e2e": "npm run build && cd playground && npm run e2e"
   },
   "dependencies": {
     "react": "^18.2.0"
