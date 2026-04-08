@@ -17,6 +17,9 @@ import { UseAsyncOptions } from "./types";
  * // Run on mount (fn must take no required arguments)
  * const { data, loading } = useAsync(fetchConfig, { immediate: true });
  */
+type DropLast<T extends any[]> =
+  Required<T> extends [...infer Head, any] ? Head : [];
+
 const useAsync = <
   F extends (...args: any[]) => Promise<any>,
   T = Awaited<ReturnType<F>>
@@ -33,7 +36,7 @@ const useAsync = <
   const optionsRef = useRef(options);
   useEffect(() => { optionsRef.current = options; });
 
-  const trigger = useCallback(async (...args: Parameters<F>) => {
+  const trigger = useCallback(async (...args: DropLast<Parameters<F>>) => {
     // Cancel any in-flight request before starting a new one
     controllerRef.current?.abort();
     const controller = new AbortController();
@@ -63,7 +66,7 @@ const useAsync = <
 
   useEffect(() => {
     if (options.immediate) {
-      trigger(...([] as unknown as Parameters<F>));
+      trigger(...([] as unknown as DropLast<Parameters<F>>));
     }
 
     return () => {
