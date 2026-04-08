@@ -42,7 +42,7 @@ const useAsync = <
     dispatch({ type: "pending" });
 
     try {
-      const result = await fnRef.current(...args, { signal: controller.signal });
+      const result = await fnRef.current(...args, controller.signal);
 
       if (controller.signal.aborted) return;
 
