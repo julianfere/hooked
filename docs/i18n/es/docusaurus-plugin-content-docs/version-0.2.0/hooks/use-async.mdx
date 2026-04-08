@@ -1,0 +1,75 @@
+---
+id: use-async
+title: useAsync
+sidebar_label: useAsync
+sidebar_position: 1
+---
+
+import HookPlayground from "@site/src/components/HookPlayground";
+
+# useAsync
+
+Gestiona el ciclo de vida completo de una función asíncrona — idle, pending, fulfilled y rejected — con cancelación automática y ejecución opcional al montar.
+
+## Firma
+
+```ts
+function useAsync<F extends (...args: any[]) => Promise<any>>(
+  fn: F,
+  options?: UseAsyncOptions<Awaited<ReturnType<F>>>
+): UseAsyncReturn<F>
+```
+
+## Opciones
+
+| Propiedad | Tipo | Por defecto | Descripción |
+|-----------|------|-------------|-------------|
+| `immediate` | `boolean` | `false` | Ejecuta `fn` automáticamente al montar |
+| `onSuccess` | `(data: T) => void` | — | Se llama cuando la promesa se resuelve |
+| `onError` | `(error: unknown) => void` | — | Se llama cuando la promesa es rechazada |
+
+## Valor de retorno
+
+| Propiedad | Tipo | Descripción |
+|-----------|------|-------------|
+| `status` | `"idle" \| "pending" \| "fulfilled" \| "rejected"` | Estado actual del ciclo de vida |
+| `data` | `T \| undefined` | Valor resuelto, o `undefined` |
+| `error` | `unknown \| undefined` | Razón del rechazo, o `undefined` |
+| `loading` | `boolean` | `true` mientras `status === "pending"` |
+| `trigger` | `(...args) => Promise<void>` | Dispara manualmente la función asíncrona |
+| `reset` | `() => void` | Vuelve el estado a `idle` |
+
+## Comportamientos clave
+
+- Se pasa un `AbortSignal` como **último argumento** a `fn`. Úsalo con `fetch` para cancelación automática.
+- Re-disparar mientras hay una request en vuelo cancela la anterior automáticamente.
+- El controlador de abort se limpia al desmontar el componente.
+
+## Ejemplo interactivo
+
+<HookPlayground
+  previewHeight={360}
+  showConsole
+  code={`import { useAsync } from "@julianfere/hooked";
+
+export default function App() {
+  const { data, status, loading, error, trigger, reset } = useAsync(
+    (signal: AbortSignal) =>
+      fetch("https://jsonplaceholder.typicode.com/todos/1", { signal }).then(
+        (r) => r.json()
+      )
+  );
+
+  return (
+    <div style={{ padding: 24, fontFamily: "sans-serif" }}>
+      <p>Estado: <strong>{status}</strong></p>
+      {loading && <p>Cargando…</p>}
+      {error && <p style={{ color: "red" }}>¡Error!</p>}
+      {data && <pre>{JSON.stringify(data, null, 2)}</pre>}
+      <button onClick={() => trigger()} disabled={loading}>Obtener</button>
+      {" "}
+      <button onClick={reset}>Reiniciar</button>
+    </div>
+  );
+}`}
+/>

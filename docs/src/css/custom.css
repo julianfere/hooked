@@ -1,0 +1,161 @@
+/* ============================================================
+   Catppuccin Mocha — dark mode (default)
+   ============================================================ */
+:root,
+[data-theme="dark"] {
+  /* Backgrounds */
+  --ifm-background-color: #1e1e2e; /* base */
+  --ifm-background-surface-color: #181825; /* mantle */
+  --ifm-navbar-background-color: #181825;
+  --ifm-footer-background-color: #11111b; /* crust */
+  --ifm-card-background-color: #313244; /* surface0 */
+
+  /* Text */
+  --ifm-font-color-base: #cdd6f4; /* text */
+  --ifm-font-color-secondary: #bac2de; /* subtext1 */
+  --ifm-heading-color: #cdd6f4;
+
+  /* Primary — Catppuccin blue */
+  --ifm-color-primary: #89b4fa;
+  --ifm-color-primary-dark: #74a8f9;
+  --ifm-color-primary-darker: #699af8;
+  --ifm-color-primary-darkest: #4183f6;
+  --ifm-color-primary-light: #9ec0fb;
+  --ifm-color-primary-lighter: #a9c8fb;
+  --ifm-color-primary-lightest: #c5d9fd;
+  --ifm-link-color: #89b4fa;
+  --ifm-link-hover-color: #b4d0ff;
+
+  /* Semantic colours */
+  --ifm-color-success: #a6e3a1; /* green */
+  --ifm-color-info: #89dceb; /* sky */
+  --ifm-color-warning: #fab387; /* peach */
+  --ifm-color-danger: #f38ba8; /* red */
+
+  /* Code blocks */
+  --ifm-code-background: #313244; /* surface0 */
+  --ifm-code-font-size: 0.9rem;
+  --docusaurus-highlighted-code-line-bg: rgba(137, 180, 250, 0.1);
+
+  /* Borders / dividers */
+  --ifm-toc-border-color: #45475a; /* surface1 */
+  --ifm-navbar-shadow: 0 1px 0 #313244;
+  --ifm-hr-border-color: #45475a;
+
+  /* Custom tokens for component use */
+  --hooked-mauve: #cba6f7;
+  --hooked-peach: #fab387;
+  --hooked-green: #a6e3a1;
+  --hooked-blue: #89b4fa;
+  --hooked-red: #f38ba8;
+  --hooked-sky: #89dceb;
+  --hooked-teal: #94e2d5;
+  --hooked-surface0: #313244;
+  --hooked-surface1: #45475a;
+  --hooked-overlay0: #6c7086;
+}
+
+/* ── Catppuccin Latte — light mode ───────────────────────── */
+[data-theme="light"] {
+  /* Backgrounds */
+  --ifm-background-color: #eff1f5; /* latte base */
+  --ifm-background-surface-color: #e6e9ef; /* latte mantle */
+  --ifm-navbar-background-color: #dce0e8; /* latte crust */
+  --ifm-footer-background-color: #dce0e8;
+  --ifm-card-background-color: #e6e9ef; /* latte mantle */
+
+  /* Text */
+  --ifm-font-color-base: #4c4f69; /* latte text */
+  --ifm-font-color-secondary: #5c5f77; /* latte subtext1 */
+  --ifm-heading-color: #4c4f69;
+
+  /* Primary — latte blue */
+  --ifm-color-primary: #1e66f5;
+  --ifm-color-primary-dark: #0d56e5;
+  --ifm-color-primary-darker: #0c51d8;
+  --ifm-color-primary-darkest: #0a43b2;
+  --ifm-color-primary-light: #2f76ff;
+  --ifm-color-primary-lighter: #3a7eff;
+  --ifm-color-primary-lightest: #6199ff;
+  --ifm-link-color: #1e66f5;
+  --ifm-link-hover-color: #0a43b2;
+
+  /* Semantic colours — latte variants */
+  --ifm-color-success: #40a02b; /* latte green */
+  --ifm-color-info: #04a5e5; /* latte sky */
+  --ifm-color-warning: #fe640b; /* latte peach */
+  --ifm-color-danger: #d20f39; /* latte red */
+
+  /* Code */
+  --ifm-code-background: #dce0e8;
+  --docusaurus-highlighted-code-line-bg: rgba(30, 102, 245, 0.1);
+
+  /* Borders */
+  --ifm-toc-border-color: #bcc0cc; /* latte surface1 */
+  --ifm-navbar-shadow: 0 1px 0 #ccd0da;
+  --ifm-hr-border-color: #bcc0cc;
+
+  /* Custom tokens — latte palette */
+  --hooked-blue: #1e66f5;
+  --hooked-mauve: #8839ef;
+  --hooked-peach: #fe640b;
+  --hooked-green: #40a02b;
+  --hooked-red: #d20f39;
+  --hooked-sky: #04a5e5;
+  --hooked-teal: #179299;
+  --hooked-surface0: #ccd0da;
+  --hooked-surface1: #bcc0cc;
+  --hooked-overlay0: #9ca0b0;
+}
+
+/* ── Global tweaks ────────────────────────────────────────── */
+.navbar {
+  border-bottom: 1px solid var(--hooked-surface0);
+}
+
+.footer {
+  border-top: 1px solid var(--hooked-surface0);
+}
+
+code {
+  border-radius: 4px;
+  padding: 0.1rem 0.35rem;
+  background-color: var(--ifm-code-background);
+}
+
+/* ── Playground container ─────────────────────────────────── */
+.sandpack-wrapper {
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 1.5rem 0;
+  border: 1px solid var(--hooked-surface1);
+}
+
+/* ── Hero page ────────────────────────────────────────────── */
+.hero--hooked {
+  background: linear-gradient(135deg, #181825 0%, #1e1e2e 60%, #2a2a3d 100%);
+  border-bottom: 1px solid var(--hooked-surface0);
+}
+
+.hero--hooked .hero__title {
+  font-size: 3.5rem;
+  background: linear-gradient(90deg, var(--hooked-blue), var(--hooked-mauve));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="light"] .hero--hooked {
+  background: linear-gradient(135deg, #dce0e8 0%, #eff1f5 100%);
+}
+
+[data-theme="light"] .hero--hooked .hero__title {
+  background: linear-gradient(90deg, #1e66f5, #8839ef);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="light"] .hero--hooked .hero__subtitle {
+  color: #5c5f77; /* latte subtext1 */
+}
