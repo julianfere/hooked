@@ -1,0 +1,63 @@
+---
+id: use-delay
+title: useDelay
+sidebar_label: useDelay
+sidebar_position: 4
+---
+
+import HookPlayground from "@site/src/components/HookPlayground";
+
+# useDelay
+
+Executes a callback after a configurable delay. Supports both automatic execution on mount and manual trigger mode.
+
+## Signature
+
+```ts
+function useDelay(
+  callback: () => void,
+  options?: { delay?: number; manual?: boolean }
+): () => void | undefined
+```
+
+## Options
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `delay` | `number` | `250` | Milliseconds before the callback fires |
+| `manual` | `boolean` | `false` | When `true`, the hook returns a trigger function instead of auto-executing |
+
+## Return value
+
+| Mode | Return | Description |
+|------|--------|-------------|
+| `manual: false` | `() => {}` | No-op (auto-executes on mount) |
+| `manual: true` | `() => void \| undefined` | Call this to start the delayed execution |
+
+The cleanup function can also cancel a pending timeout if called before the delay elapses.
+
+## Live example
+
+<HookPlayground
+  previewHeight={260}
+  code={`import { useState } from "react";
+import { useDelay } from "@julianfere/hooked";
+
+export default function App() {
+  const [message, setMessage] = useState("Waiting…");
+
+  const trigger = useDelay(
+    () => setMessage("Fired after 1 second!"),
+    { delay: 1000, manual: true }
+  );
+
+  return (
+    <div style={{ padding: 24, fontFamily: "sans-serif" }}>
+      <p>{message}</p>
+      <button onClick={() => { setMessage("Waiting…"); trigger?.(); }}>
+        Trigger (1 s delay)
+      </button>
+    </div>
+  );
+}`}
+/>

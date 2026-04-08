@@ -1,0 +1,44 @@
+---
+id: use-document-title
+title: useDocumentTitle
+sidebar_label: useDocumentTitle
+sidebar_position: 5
+---
+
+# useDocumentTitle
+
+Establece `document.title` de forma declarativa y restaura el título original al desmontar (a menos que se opte por no hacerlo).
+
+## Firma
+
+```ts
+function useDocumentTitle(title: string, persistOnUnmount?: boolean): void
+```
+
+## Parámetros
+
+| Parámetro | Tipo | Por defecto | Descripción |
+|-----------|------|-------------|-------------|
+| `title` | `string` | — | El título a establecer |
+| `persistOnUnmount` | `boolean` | `false` | Cuando es `true`, el título no se restaura al desmontar el componente |
+
+## Comportamiento
+
+- Establece `document.title` inmediatamente en cada render cuando `title` cambia.
+- Captura el título original en un `ref` al montar.
+- Restaura el título original al desmontar, a menos que `persistOnUnmount` sea `true`.
+
+## Ejemplo
+
+```tsx
+import { useDocumentTitle } from "@julianfere/hooked";
+
+function PaginaProducto({ nombre }: { nombre: string }) {
+  useDocumentTitle(`${nombre} — Mi Tienda`);
+  return <h1>{nombre}</h1>;
+}
+```
+
+:::note
+Este hook interactúa con `document.title`, que no está disponible en entornos de renderizado del lado del servidor. En un setup con SSR, asegurate de que el hook sólo se ejecute en el cliente.
+:::

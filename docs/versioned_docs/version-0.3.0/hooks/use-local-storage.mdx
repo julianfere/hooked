@@ -1,0 +1,83 @@
+---
+id: use-local-storage
+title: useLocalStorage
+sidebar_label: useLocalStorage
+sidebar_position: 6
+---
+
+import HookPlayground from "@site/src/components/HookPlayground";
+
+# useLocalStorage
+
+Provides fully typed access to `localStorage` with automatic JSON serialisation and deserialisation.
+
+## Signature
+
+```ts
+function useLocalStorage<Type extends Record<string, any>>(): {
+  getItem: <Key extends keyof Type>(key: Key) => Type[Key] | null;
+  setItem: (key: keyof Type, value: Type[keyof Type]) => void;
+  removeItem: (key: keyof Type) => void;
+  hasItem: (key: keyof Type) => boolean;
+  clear: () => void;
+}
+```
+
+## Type parameter
+
+Pass your storage schema as a generic to get full auto-completion and type safety:
+
+```ts
+interface MyStorage {
+  theme: "dark" | "light";
+  userId: number;
+  preferences: { lang: string; notifications: boolean };
+}
+
+const storage = useLocalStorage<MyStorage>();
+storage.setItem("theme", "dark");           // ✅
+storage.setItem("theme", "blue");           // ❌ Type error
+```
+
+## Return value
+
+| Method | Description |
+|--------|-------------|
+| `getItem(key)` | Returns the typed value or `null` if not set |
+| `setItem(key, value)` | Serialises and stores the value |
+| `removeItem(key)` | Removes the key from storage |
+| `hasItem(key)` | Returns `true` if the key exists |
+| `clear()` | Removes all keys from storage |
+
+## Error handling
+
+The hook throws an `UnsupportedClient` error if `window.localStorage` is unavailable (e.g., in a server-side rendering context or when storage is blocked by the browser).
+
+## Live example
+
+<HookPlayground
+  previewHeight={300}
+  code={`import { useLocalStorage } from "@julianfere/hooked";
+
+interface Store {
+  name: string;
+  count: number;
+}
+
+export default function App() {
+  const { getItem, setItem, removeItem, hasItem } = useLocalStorage<Store>();
+
+  return (
+    <div style={{ padding: 24, fontFamily: "sans-serif" }}>
+      <p>Has "name": {String(hasItem("name"))}</p>
+      <p>name: {getItem("name") ?? "—"}</p>
+      <p>count: {getItem("count") ?? "—"}</p>
+      <button onClick={() => setItem("name", "Alice")}>Set name</button>{" "}
+      <button onClick={() => setItem("count", (getItem("count") ?? 0) + 1)}>
+        Increment count
+      </button>{" "}
+      <button onClick={() => removeItem("name")}>Remove name</button>
+    </div>
+  );
+}`}
+/>

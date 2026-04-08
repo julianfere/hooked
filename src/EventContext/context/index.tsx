@@ -1,8 +1,9 @@
 import {
-  Context,
   PropsWithChildren,
   createContext,
+  useCallback,
   useContext,
+  useMemo,
   useRef,
 } from "react";
 import {
@@ -13,70 +14,55 @@ import {
 } from "./types";
 
 const createFactories = <GenericEvents extends Record<string, any>>() => {
-  const createEventContext = <
-    EventType extends IEventContext<GenericEvents>
-  >() => {
-    return createContext<EventType>({} as EventType);
-  };
+  const context = createContext<IEventContext<GenericEvents> | null>(null);
 
-  const createEventProvider = (
-    context: Context<IEventContext<GenericEvents>>
-  ) => {
+  const createEventProvider = () => {
     return ({ children }: PropsWithChildren) => {
-      const subscriberRef = useRef<ISubscriptions[]>([]);
+      const subscriberRef = useRef<ISubscriptions<GenericEvents>[]>([]);
 
-      const unsubscribe = (id: string) => {
+      const unsubscribe = useCallback((id: string) => {
         subscriberRef.current = subscriberRef.current.filter(
           (sub) => sub.id !== id
         );
-      };
+      }, []);
 
-      const subscribe: SubscriptionHandler<GenericEvents> = (
-        eventName,
-        callback
-      ) => {
-        const id = crypto.randomUUID();
-        subscriberRef.current = [
-          ...subscriberRef.current,
-          { id, eventName, callback },
-        ];
+      const subscribe: SubscriptionHandler<GenericEvents> = useCallback(
+        (eventName, callback) => {
+          const id = crypto.randomUUID();
+          subscriberRef.current.push({ id, eventName, callback });
+          return () => unsubscribe(id);
+        },
+        [unsubscribe]
+      );
 
-        return () => unsubscribe(id);
-      };
+      const publish: Publisher<GenericEvents> = useCallback(
+        (eventName, data) => {
+          subscriberRef.current.forEach((sub) => {
+            if (sub.eventName === eventName) {
+              sub.callback(data);
+            }
+          });
+        },
+        []
+      );
 
-      const publish: Publisher<GenericEvents> = (eventName, data) => {
-        subscriberRef.current.forEach((sub) => {
-          if (sub.eventName === eventName) {
-            sub.callback(data);
-          }
-        });
-      };
-
-      const value = {
-        subscribe,
-        publish,
-      };
+      const value = useMemo(() => ({ subscribe, publish }), [subscribe, publish]);
 
       return <context.Provider value={value}>{children}</context.Provider>;
     };
   };
 
-  const createEventHook = (context: Context<IEventContext<GenericEvents>>) => {
+  const createEventHook = () => {
     return () => {
-      if (!context) {
-        throw new Error("useEvents must be used within a EventProvider");
-      }
-
       const ctx = useContext(context);
-      if (!ctx) {
+      if (ctx === null) {
         throw new Error("useEvents must be used within a EventProvider");
       }
-
       return ctx;
     };
   };
 
-  return { createEventContext, createEventProvider, createEventHook };
+  return { createEventProvider, createEventHook };
 };
 
 export { createFactories };

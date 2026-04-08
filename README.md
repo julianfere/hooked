@@ -440,12 +440,10 @@ interface AppEvents {
   cartUpdated: { itemCount: number };
 }
 
-const { createEventContext, createEventProvider, createEventHook } =
-  factory<AppEvents>();
+const { createEventProvider, createEventHook } = factory<AppEvents>();
 
-const EventCtx = createEventContext();
-export const EventsProvider = createEventProvider(EventCtx);
-export const useEvents = createEventHook(EventCtx);
+export const EventsProvider = createEventProvider();
+export const useEvents = createEventHook();
 
 // Wrap your app
 const App = () => (
@@ -483,15 +481,13 @@ const NotificationComponent = () => {
 <h4>API</h4>
 
 ```typescript
-const { createEventContext, createEventProvider, createEventHook } =
-  factory<AppEvents>();
+const { createEventProvider, createEventHook } = factory<AppEvents>();
 ```
 
 | Function | Description |
 |----------|-------------|
-| `createEventContext()` | Creates the context object |
-| `createEventProvider(ctx)` | Returns a provider component to wrap your tree |
-| `createEventHook(ctx)` | Returns the hook for use in components |
+| `createEventProvider()` | Returns a provider component to wrap your tree |
+| `createEventHook()` | Returns the hook for use in components |
 
 **Hook API**:
 
