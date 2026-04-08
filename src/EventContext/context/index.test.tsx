@@ -15,33 +15,18 @@ describe("createFactories", () => {
     factories = createFactories<ITestEvents>();
   });
 
-  it("should return an object with createEventContext, createEventProvider and createEventHook", () => {
+  it("should return an object with createEventProvider and createEventHook", () => {
     expect(factories).toMatchObject({
-      createEventContext: expect.any(Function),
       createEventProvider: expect.any(Function),
       createEventHook: expect.any(Function),
     });
   });
 
-  describe("createEventContext", () => {
-    let context: ReturnType<typeof factories.createEventContext>;
-
-    beforeAll(() => {
-      context = factories.createEventContext();
-    });
-
-    it("should return a context", () => {
-      expect(context).toBeDefined();
-    });
-  });
-
   describe("createEventProvider", () => {
-    let context: ReturnType<typeof factories.createEventContext>;
     let createEventProvider: ReturnType<typeof factories.createEventProvider>;
 
     beforeAll(() => {
-      context = factories.createEventContext();
-      createEventProvider = factories.createEventProvider(context);
+      createEventProvider = factories.createEventProvider();
     });
 
     it("should return a provider", () => {
@@ -50,12 +35,10 @@ describe("createFactories", () => {
   });
 
   describe("createEventHook", () => {
-    let context: ReturnType<typeof factories.createEventContext>;
     let createEventHook: ReturnType<typeof factories.createEventHook>;
 
     beforeAll(() => {
-      context = factories.createEventContext();
-      createEventHook = factories.createEventHook(context);
+      createEventHook = factories.createEventHook();
     });
 
     it("should return a hook", () => {
@@ -66,13 +49,11 @@ describe("createFactories", () => {
 
 describe("createEventProvider", () => {
   let factories: ReturnType<typeof createFactories<ITestEvents>>;
-  let context: ReturnType<typeof factories.createEventContext>;
   let Provider: ReturnType<typeof factories.createEventProvider>;
 
   beforeAll(() => {
     factories = createFactories<ITestEvents>();
-    context = factories.createEventContext();
-    Provider = factories.createEventProvider(context);
+    Provider = factories.createEventProvider();
   });
 
   it("should return a provider", () => {
@@ -82,15 +63,13 @@ describe("createEventProvider", () => {
 
 describe("createEventHook", () => {
   let factories: ReturnType<typeof createFactories<ITestEvents>>;
-  let context: ReturnType<typeof factories.createEventContext>;
   let useEvents: ReturnType<typeof factories.createEventHook>;
   let Provider: ReturnType<typeof factories.createEventProvider>;
 
   beforeAll(() => {
     factories = createFactories<ITestEvents>();
-    context = factories.createEventContext();
-    useEvents = factories.createEventHook(context);
-    Provider = factories.createEventProvider(context);
+    useEvents = factories.createEventHook();
+    Provider = factories.createEventProvider();
   });
 
   it("should return a hook", () => {
@@ -173,5 +152,67 @@ describe("createEventHook", () => {
 
       expect(callback).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+describe("EventContext edge cases", () => {
+  let factories: ReturnType<typeof createFactories<ITestEvents>>;
+  let Provider: ReturnType<typeof factories.createEventProvider>;
+  let useEvents: ReturnType<typeof factories.createEventHook>;
+
+  beforeAll(() => {
+    factories = createFactories<ITestEvents>();
+    Provider = factories.createEventProvider();
+    useEvents = factories.createEventHook();
+  });
+
+  it("should call all callbacks when multiple subscribers exist for the same event", () => {
+    const callback1 = vi.fn();
+    const callback2 = vi.fn();
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <Provider>{children}</Provider>
+    );
+
+    const { result } = renderHook(() => useEvents(), { wrapper });
+
+    act(() => {
+      result.current.subscribe("test", callback1);
+      result.current.subscribe("test", callback2);
+    });
+
+    result.current.publish("test", "data");
+
+    expect(callback1).toHaveBeenCalledWith("data");
+    expect(callback2).toHaveBeenCalledWith("data");
+  });
+
+  it("should accept a new subscription after unsubscribing", () => {
+    const callback = vi.fn();
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <Provider>{children}</Provider>
+    );
+
+    let unsubscribe = () => {};
+
+    const { result } = renderHook(() => useEvents(), { wrapper });
+
+    act(() => (unsubscribe = result.current.subscribe("test", callback)));
+    act(() => unsubscribe());
+
+    act(() => result.current.subscribe("test", callback));
+
+    result.current.publish("test", "data");
+
+    expect(callback).toHaveBeenCalledTimes(1);
+  });
+
+  it("should not throw when publishing with no subscribers", () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <Provider>{children}</Provider>
+    );
+
+    const { result } = renderHook(() => useEvents(), { wrapper });
+
+    expect(() => result.current.publish("test", "data")).not.toThrow();
   });
 });

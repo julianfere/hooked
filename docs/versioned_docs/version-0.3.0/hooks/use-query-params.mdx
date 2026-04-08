@@ -1,0 +1,90 @@
+---
+id: use-query-params
+title: useQueryParams
+sidebar_label: useQueryParams
+sidebar_position: 7
+---
+
+# useQueryParams
+
+Read and write URL query parameters with full type safety. Automatically stays in sync with browser navigation (back / forward).
+
+## Signature
+
+```ts
+function useQueryParams<TQuery extends Record<string, any>>(): {
+  get: (...keys: (keyof TQuery)[]) => Partial<TQuery>;
+  set: (params: Partial<TQuery>, url?: string) => void;
+  build: (params: Partial<TQuery>) => string;
+  pathname: string;
+  search: string;
+  clear: () => void;
+}
+```
+
+## Type parameter
+
+Define your query shape as a generic for auto-completion and type-safe access:
+
+```ts
+interface Filters {
+  page: number;
+  q: string;
+  active: boolean;
+}
+
+const { get, set } = useQueryParams<Filters>();
+const { page, q } = get("page", "q");
+set({ page: 2 });
+```
+
+## Return value
+
+| Method / Property | Description |
+|-------------------|-------------|
+| `get(...keys)` | Returns an object with the requested params, auto-casting to `boolean`, `number`, or parsed JSON |
+| `set(params, url?)` | Pushes updated params to the URL. Optionally target a different path |
+| `build(params)` | Returns a query string from `params` without navigating |
+| `pathname` | Current `location.pathname` |
+| `search` | Current `location.search` |
+| `clear()` | Removes all query params from the URL |
+
+## Value auto-casting
+
+`get()` automatically casts values from the URL string:
+
+| String value | Casted as |
+|--------------|-----------|
+| `"true"` / `"false"` | `boolean` |
+| `"42"` | `number` |
+| `'{"a":1}'` | Parsed object/array |
+| Anything else | `string` |
+
+## Example
+
+```tsx
+import { useQueryParams } from "@julianfere/hooked";
+
+interface SearchParams {
+  q: string;
+  page: number;
+  active: boolean;
+}
+
+function SearchPage() {
+  const { get, set, clear } = useQueryParams<SearchParams>();
+  const { q = "", page = 1 } = get("q", "page");
+
+  return (
+    <div>
+      <input value={q} onChange={(e) => set({ q: e.target.value, page: 1 })} />
+      <button onClick={() => set({ page: page + 1 })}>Next page</button>
+      <button onClick={clear}>Clear filters</button>
+    </div>
+  );
+}
+```
+
+:::note
+This hook relies on `window.location` and `history.pushState`. It is not compatible with server-side rendering out of the box.
+:::

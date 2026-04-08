@@ -13,8 +13,8 @@ export interface IEventContext<GenericEvent extends Record<string, any>> {
   publish: Publisher<GenericEvent>;
 }
 
-export interface ISubscriptions {
+export interface ISubscriptions<GenericEvents extends Record<string, any>> {
   id: string;
-  eventName: any;
+  eventName: keyof GenericEvents;
   callback: (payload: any) => void;
 }

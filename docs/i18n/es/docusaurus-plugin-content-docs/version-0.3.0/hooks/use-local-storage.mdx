@@ -1,0 +1,83 @@
+---
+id: use-local-storage
+title: useLocalStorage
+sidebar_label: useLocalStorage
+sidebar_position: 6
+---
+
+import HookPlayground from "@site/src/components/HookPlayground";
+
+# useLocalStorage
+
+Proporciona acceso completamente tipado a `localStorage` con serialización y deserialización JSON automática.
+
+## Firma
+
+```ts
+function useLocalStorage<Type extends Record<string, any>>(): {
+  getItem: <Key extends keyof Type>(key: Key) => Type[Key] | null;
+  setItem: (key: keyof Type, value: Type[keyof Type]) => void;
+  removeItem: (key: keyof Type) => void;
+  hasItem: (key: keyof Type) => boolean;
+  clear: () => void;
+}
+```
+
+## Parámetro de tipo
+
+Pasá tu esquema de almacenamiento como genérico para obtener autocompletado y tipado completo:
+
+```ts
+interface MiStorage {
+  tema: "dark" | "light";
+  usuarioId: number;
+  preferencias: { idioma: string; notificaciones: boolean };
+}
+
+const storage = useLocalStorage<MiStorage>();
+storage.setItem("tema", "dark");          // ✅
+storage.setItem("tema", "azul");          // ❌ Error de tipos
+```
+
+## Valor de retorno
+
+| Método | Descripción |
+|--------|-------------|
+| `getItem(key)` | Devuelve el valor tipado o `null` si no está definido |
+| `setItem(key, value)` | Serializa y almacena el valor |
+| `removeItem(key)` | Elimina la clave del storage |
+| `hasItem(key)` | Devuelve `true` si la clave existe |
+| `clear()` | Elimina todas las claves del storage |
+
+## Manejo de errores
+
+El hook lanza un error `UnsupportedClient` si `window.localStorage` no está disponible (p.ej., en contextos de SSR o cuando el storage está bloqueado por el navegador).
+
+## Ejemplo interactivo
+
+<HookPlayground
+  previewHeight={300}
+  code={`import { useLocalStorage } from "@julianfere/hooked";
+
+interface Store {
+  name: string;
+  count: number;
+}
+
+export default function App() {
+  const { getItem, setItem, removeItem, hasItem } = useLocalStorage<Store>();
+
+  return (
+    <div style={{ padding: 24, fontFamily: "sans-serif" }}>
+      <p>Tiene "name": {String(hasItem("name"))}</p>
+      <p>name: {getItem("name") ?? "—"}</p>
+      <p>count: {getItem("count") ?? "—"}</p>
+      <button onClick={() => setItem("name", "Alice")}>Guardar nombre</button>{" "}
+      <button onClick={() => setItem("count", (getItem("count") ?? 0) + 1)}>
+        Incrementar count
+      </button>{" "}
+      <button onClick={() => removeItem("name")}>Borrar nombre</button>
+    </div>
+  );
+}`}
+/>
