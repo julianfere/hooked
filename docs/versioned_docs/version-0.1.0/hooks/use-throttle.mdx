@@ -1,0 +1,63 @@
+---
+id: use-throttle
+title: useThrottle
+sidebar_label: useThrottle
+sidebar_position: 3
+---
+
+import HookPlayground from "@site/src/components/HookPlayground";
+
+# useThrottle
+
+Returns a throttled copy of a value. The first change within an interval passes through immediately (leading edge), and the last change within that window is scheduled at the end of the interval (trailing edge).
+
+## Signature
+
+```ts
+function useThrottle<T>(value: T, interval?: number): T
+```
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `value` | `T` | — | The value to throttle |
+| `interval` | `number` | `500` | Window size in milliseconds |
+
+## Return value
+
+The throttled value of type `T`.
+
+## Leading + trailing semantics
+
+| Event | Behaviour |
+|-------|-----------|
+| First change in window | Passes through immediately |
+| Subsequent changes in same window | Queued, last one wins |
+| End of window | Queued value is emitted |
+
+## Live example
+
+<HookPlayground
+  previewHeight={280}
+  code={`import { useState } from "react";
+import { useThrottle } from "@julianfere/hooked";
+
+export default function App() {
+  const [input, setInput] = useState("");
+  const throttled = useThrottle(input, 800);
+
+  return (
+    <div style={{ padding: 24, fontFamily: "sans-serif" }}>
+      <input
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Type fast…"
+        style={{ width: "100%", padding: 8, marginBottom: 12 }}
+      />
+      <p>Live: <strong>{input}</strong></p>
+      <p>Throttled (800 ms): <strong>{throttled}</strong></p>
+    </div>
+  );
+}`}
+/>

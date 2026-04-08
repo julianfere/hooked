@@ -1,0 +1,90 @@
+---
+id: use-query-params
+title: useQueryParams
+sidebar_label: useQueryParams
+sidebar_position: 7
+---
+
+# useQueryParams
+
+Lee y escribe parámetros de URL con tipado completo. Se mantiene sincronizado automáticamente con la navegación del navegador (atrás / adelante).
+
+## Firma
+
+```ts
+function useQueryParams<TQuery extends Record<string, any>>(): {
+  get: (...keys: (keyof TQuery)[]) => Partial<TQuery>;
+  set: (params: Partial<TQuery>, url?: string) => void;
+  build: (params: Partial<TQuery>) => string;
+  pathname: string;
+  search: string;
+  clear: () => void;
+}
+```
+
+## Parámetro de tipo
+
+Definí la forma de tus query params como genérico para obtener autocompletado y acceso tipado:
+
+```ts
+interface Filtros {
+  pagina: number;
+  q: string;
+  activo: boolean;
+}
+
+const { get, set } = useQueryParams<Filtros>();
+const { pagina, q } = get("pagina", "q");
+set({ pagina: 2 });
+```
+
+## Valor de retorno
+
+| Método / Propiedad | Descripción |
+|--------------------|-------------|
+| `get(...keys)` | Devuelve un objeto con los params solicitados, haciendo auto-cast a `boolean`, `number` o JSON parseado |
+| `set(params, url?)` | Empuja los params actualizados a la URL. Opcionalmente apunta a otro path |
+| `build(params)` | Devuelve un query string a partir de `params` sin navegar |
+| `pathname` | `location.pathname` actual |
+| `search` | `location.search` actual |
+| `clear()` | Elimina todos los query params de la URL |
+
+## Auto-conversión de valores
+
+`get()` convierte automáticamente los valores del string de la URL:
+
+| Valor en string | Convertido a |
+|-----------------|--------------|
+| `"true"` / `"false"` | `boolean` |
+| `"42"` | `number` |
+| `'{"a":1}'` | Objeto/array parseado |
+| Cualquier otra cosa | `string` |
+
+## Ejemplo
+
+```tsx
+import { useQueryParams } from "@julianfere/hooked";
+
+interface ParamsBusqueda {
+  q: string;
+  pagina: number;
+  activo: boolean;
+}
+
+function PaginaBusqueda() {
+  const { get, set, clear } = useQueryParams<ParamsBusqueda>();
+  const { q = "", pagina = 1 } = get("q", "pagina");
+
+  return (
+    <div>
+      <input value={q} onChange={(e) => set({ q: e.target.value, pagina: 1 })} />
+      <button onClick={() => set({ pagina: pagina + 1 })}>Siguiente página</button>
+      <button onClick={clear}>Limpiar filtros</button>
+    </div>
+  );
+}
+```
+
+:::note
+Este hook depende de `window.location` y `history.pushState`. No es compatible con renderizado del lado del servidor out of the box.
+:::

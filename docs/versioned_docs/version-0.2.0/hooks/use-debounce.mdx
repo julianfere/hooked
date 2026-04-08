@@ -1,0 +1,55 @@
+---
+id: use-debounce
+title: useDebounce
+sidebar_label: useDebounce
+sidebar_position: 2
+---
+
+import HookPlayground from "@site/src/components/HookPlayground";
+
+# useDebounce
+
+Returns a debounced copy of a value — the copy only updates after the specified delay has elapsed since the last change.
+
+## Signature
+
+```ts
+function useDebounce<T>(value: T, delay?: number): T
+```
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `value` | `T` | — | The value to debounce |
+| `delay` | `number` | `500` | Milliseconds to wait after the last change |
+
+## Return value
+
+The debounced value of type `T`. It will always equal the initial `value` on the first render.
+
+## Live example
+
+<HookPlayground
+  previewHeight={280}
+  code={`import { useState } from "react";
+import { useDebounce } from "@julianfere/hooked";
+
+export default function App() {
+  const [input, setInput] = useState("");
+  const debounced = useDebounce(input, 600);
+
+  return (
+    <div style={{ padding: 24, fontFamily: "sans-serif" }}>
+      <input
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Type something…"
+        style={{ width: "100%", padding: 8, marginBottom: 12 }}
+      />
+      <p>Live: <strong>{input}</strong></p>
+      <p>Debounced (600 ms): <strong>{debounced}</strong></p>
+    </div>
+  );
+}`}
+/>

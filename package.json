@@ -18,6 +18,9 @@
       "types": "./dist/events.d.ts"
     }
   },
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -27,7 +30,9 @@
     "test": "vitest run",
     "lint": "tsc",
     "ci": "yarn lint && yarn test && yarn build",
-    "release": "yarn lint && yarn test && yarn build && changeset publish"
+    "release": "yarn lint && yarn test && yarn build && changeset publish",
+    "docs:dev": "cd docs && npm run start",
+    "docs:build": "cd docs && npm run build"
   },
   "dependencies": {
     "react": "^18.2.0"

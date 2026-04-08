@@ -1,0 +1,63 @@
+---
+id: use-delay
+title: useDelay
+sidebar_label: useDelay
+sidebar_position: 4
+---
+
+import HookPlayground from "@site/src/components/HookPlayground";
+
+# useDelay
+
+Ejecuta un callback tras un retardo configurable. Soporta ejecución automática al montar y modo de disparo manual.
+
+## Firma
+
+```ts
+function useDelay(
+  callback: () => void,
+  options?: { delay?: number; manual?: boolean }
+): () => void | undefined
+```
+
+## Opciones
+
+| Propiedad | Tipo | Por defecto | Descripción |
+|-----------|------|-------------|-------------|
+| `delay` | `number` | `250` | Milisegundos antes de que se ejecute el callback |
+| `manual` | `boolean` | `false` | Cuando es `true`, el hook devuelve una función de disparo en lugar de auto-ejecutarse |
+
+## Valor de retorno
+
+| Modo | Retorno | Descripción |
+|------|---------|-------------|
+| `manual: false` | `() => {}` | No-op (se auto-ejecuta al montar) |
+| `manual: true` | `() => void \| undefined` | Llamá a esta función para iniciar la ejecución retardada |
+
+La función de limpieza también puede cancelar un timeout pendiente si se llama antes de que transcurra el retardo.
+
+## Ejemplo interactivo
+
+<HookPlayground
+  previewHeight={260}
+  code={`import { useState } from "react";
+import { useDelay } from "@julianfere/hooked";
+
+export default function App() {
+  const [message, setMessage] = useState("Esperando…");
+
+  const trigger = useDelay(
+    () => setMessage("¡Se disparó después de 1 segundo!"),
+    { delay: 1000, manual: true }
+  );
+
+  return (
+    <div style={{ padding: 24, fontFamily: "sans-serif" }}>
+      <p>{message}</p>
+      <button onClick={() => { setMessage("Esperando…"); trigger?.(); }}>
+        Disparar (1 s de retardo)
+      </button>
+    </div>
+  );
+}`}
+/>

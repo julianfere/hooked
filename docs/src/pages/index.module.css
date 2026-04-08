@@ -1,0 +1,82 @@
+.heroBanner {
+  padding: 5rem 0 4rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+@media screen and (max-width: 996px) {
+  .heroBanner {
+    padding: 3rem 1.5rem;
+  }
+}
+
+.buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.installBlock {
+  margin-top: 1.5rem;
+  display: inline-block;
+  padding: 0.5rem 1.25rem;
+  background: var(--hooked-surface0);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  color: var(--hooked-green);
+  border: 1px solid var(--hooked-surface1);
+}
+
+.main {
+  padding: 3rem 0 4rem;
+}
+
+.sectionTitle {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 1.75rem;
+  color: var(--ifm-font-color-secondary);
+  font-weight: 500;
+}
+
+.hookGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.hookCard {
+  display: block;
+  padding: 1.25rem 1.5rem;
+  border-radius: 8px;
+  background: var(--ifm-card-background-color);
+  border: 1px solid var(--hooked-surface1);
+  text-decoration: none;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.hookCard:hover {
+  border-color: var(--hooked-blue);
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+
+.hookName {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 1.05rem;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.hookDesc {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ifm-font-color-secondary);
+  line-height: 1.5;
+}

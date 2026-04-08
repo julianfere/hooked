@@ -1,0 +1,56 @@
+---
+id: intro
+sidebar_position: 1
+title: Getting Started
+---
+
+# Getting Started
+
+`@julianfere/hooked` is a collection of type-safe, focused React hooks with zero dependencies beyond React itself.
+
+## Installation
+
+```bash
+npm install @julianfere/hooked
+```
+
+```bash
+yarn add @julianfere/hooked
+```
+
+## Entry points
+
+The package ships two entry points:
+
+| Import | Contents |
+|--------|----------|
+| `@julianfere/hooked` | `useAsync`, `useDebounce`, `useThrottle`, `useDelay`, `useDocumentTitle`, `useLocalStorage`, `useQueryParams` |
+| `@julianfere/hooked/events` | `factory` (EventContext pub/sub system) |
+
+## Quick example
+
+```tsx
+import { useAsync } from "@julianfere/hooked";
+
+function UserProfile({ id }: { id: string }) {
+  const { data, status, trigger } = useAsync(
+    (signal: AbortSignal) =>
+      fetch(`/api/users/${id}`, { signal }).then((r) => r.json())
+  );
+
+  if (status === "pending") return <p>Loading…</p>;
+  if (status === "rejected") return <p>Error loading user.</p>;
+
+  return (
+    <div>
+      <h1>{data?.name}</h1>
+      <button onClick={() => trigger()}>Refresh</button>
+    </div>
+  );
+}
+```
+
+## Requirements
+
+- React **18.2+**
+- TypeScript **5.0+** (recommended)

@@ -1,0 +1,157 @@
+---
+id: event-context
+title: EventContext
+sidebar_label: EventContext
+sidebar_position: 1
+---
+
+import HookPlayground from "@site/src/components/HookPlayground";
+
+# EventContext
+
+Una función factory que crea un sistema pub/sub completamente tipado basado en React Context. Importalo desde el punto de entrada dedicado:
+
+```ts
+import { factory } from "@julianfere/hooked/events";
+```
+
+## factory\<AppEvents\>()
+
+```ts
+function factory<AppEvents extends Record<string, any>>(): {
+  createEventContext: () => Context<IEventContext<AppEvents>>;
+  createEventProvider: (ctx: Context<IEventContext<AppEvents>>) =>
+    ({ children }: PropsWithChildren) => JSX.Element;
+  createEventHook: (ctx: Context<IEventContext<AppEvents>>) =>
+    () => IEventContext<AppEvents>;
+}
+```
+
+El genérico `AppEvents` define el mapa de eventos — las claves son nombres de evento, los valores son sus tipos de payload.
+
+## Configuración (una sola vez)
+
+```ts
+// events.ts
+import { factory } from "@julianfere/hooked/events";
+
+interface AppEvents {
+  usuarioLogueado: { id: string; nombre: string };
+  usuarioDeslogueado: never;
+  carritoActualizado: { cantidadItems: number };
+}
+
+const { createEventContext, createEventProvider, createEventHook } =
+  factory<AppEvents>();
+
+export const EventCtx = createEventContext();
+export const EventsProvider = createEventProvider(EventCtx);
+export const useEvents = createEventHook(EventCtx);
+```
+
+## Envolvé tu app
+
+```tsx
+// main.tsx
+import { EventsProvider } from "./events";
+
+<EventsProvider>
+  <App />
+</EventsProvider>
+```
+
+## Uso en componentes
+
+```tsx
+import { useEvents } from "./events";
+
+function BotonLogin() {
+  const { publish } = useEvents();
+
+  return (
+    <button onClick={() => publish("usuarioLogueado", { id: "1", nombre: "Alice" })}>
+      Iniciar sesión
+    </button>
+  );
+}
+
+function Navbar() {
+  const { subscribe } = useEvents();
+
+  useEffect(() => {
+    const unsub = subscribe("usuarioLogueado", ({ nombre }) => {
+      console.log(`¡Bienvenido, ${nombre}!`);
+    });
+    return unsub; // desuscribe al desmontar
+  }, [subscribe]);
+
+  return <nav>…</nav>;
+}
+```
+
+## API del hook
+
+| Método | Firma | Descripción |
+|--------|-------|-------------|
+| `publish` | `(eventName, payload) => void` | Emite un evento a todos los suscriptores actuales |
+| `subscribe` | `(eventName, callback) => () => void` | Registra un listener. Devuelve una función de desuscripción |
+
+## Manejo de errores
+
+`useEvents()` lanza un error si se usa fuera de su `EventsProvider`. Siempre asegurate de que el provider envuelva a todos los componentes que usen el hook.
+
+## Ejemplo interactivo
+
+<HookPlayground
+  previewHeight={380}
+  code={`import { factory } from "@julianfere/hooked/events";
+import { useEffect, useState } from "react";
+
+interface Events {
+  ping: { msg: string };
+}
+
+const { createEventContext, createEventProvider, createEventHook } =
+  factory<Events>();
+
+const ctx = createEventContext();
+const Provider = createEventProvider(ctx);
+const useEvents = createEventHook(ctx);
+
+function Publicador() {
+  const { publish } = useEvents();
+  return (
+    <button onClick={() => publish("ping", { msg: "¡Hola desde el Publicador!" })}>
+      Publicar ping
+    </button>
+  );
+}
+
+function Suscriptor() {
+  const { subscribe } = useEvents();
+  const [log, setLog] = useState<string[]>([]);
+
+  useEffect(() => {
+    return subscribe("ping", ({ msg }) =>
+      setLog((prev) => [...prev, msg])
+    );
+  }, [subscribe]);
+
+  return (
+    <ul>
+      {log.map((m, i) => <li key={i}>{m}</li>)}
+    </ul>
+  );
+}
+
+export default function App() {
+  return (
+    <Provider>
+      <div style={{ padding: 24, fontFamily: "sans-serif" }}>
+        <Publicador />
+        <Suscriptor />
+      </div>
+    </Provider>
+  );
+}`}
+/>

@@ -1,0 +1,14 @@
+{
+  "version.label": {
+    "message": "0.1.0",
+    "description": "The label for version 0.1.0"
+  },
+  "sidebar.docsSidebar.category.Hooks": {
+    "message": "Hooks",
+    "description": "The label for category 'Hooks' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Advanced": {
+    "message": "Avanzado",
+    "description": "The label for category 'Advanced' in sidebar 'docsSidebar'"
+  }
+}
