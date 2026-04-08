@@ -11,8 +11,8 @@ const config: Config = {
     v4: true,
   },
 
-  url: "https://julianfere.github.io",
-  baseUrl: "/hooked/",
+  url: "https://hooked.fere.com.ar",
+  baseUrl: "/",
 
   organizationName: "julianfere",
   projectName: "hooked",
