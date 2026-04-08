@@ -7,11 +7,9 @@
   <p align="center">
     A type safe, functional, and easy to use utility library for React Hooks.
     <br />
-    <a href="https://github.com/julianfere/hooked"><strong>Explore the docs »</strong></a>
+    <a href="https://julianfere.github.io/hooked"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/julianfere/hooked">View Demo</a>
-    ·
     <a href="https://github.com/julianfere/hooked/issues">Report Bug</a>
     ·
     <a href="https://github.com/julianfere/hooked/issues">Request Feature</a>
@@ -22,9 +20,7 @@
 <section id="table-of-content">
  <h2>Table of Contents</h2>
   <ul>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-    </li>
+    <li><a href="#about-the-project">About The Project</a></li>
     <li>
       <a href="#getting-started">Getting Started</a>
       <ul>
@@ -32,8 +28,8 @@
       </ul>
     </li>
     <li>
-      <a href="">Hooks</a>
-      <ul id="hooks">
+      <a href="#hooks">Hooks</a>
+      <ul>
         <li><a href="#useasync">useAsync</a></li>
         <li><a href="#usedebounce">useDebounce</a></li>
         <li><a href="#usethrottle">useThrottle</a></li>
@@ -41,12 +37,13 @@
         <li><a href="#usedelay">useDelay</a></li>
         <li><a href="#usedocumenttitle">useDocumentTitle</a></li>
         <li><a href="#usequeryparams">useQueryParams</a></li>
-      </ul >
-      <li><a href="">Hooks with context</a>
-        <ul id="context">
-          <li><a href="#eventcontext">EventContext</a></li>
-        </ul>
-      </li>
+      </ul>
+    </li>
+    <li>
+      <a href="#hooks-with-context">Hooks with context</a>
+      <ul>
+        <li><a href="#eventcontext">EventContext</a></li>
+      </ul>
     </li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
@@ -58,7 +55,7 @@
 
 ## About The Project
 
-This project is a collection of React Hooks that I have found useful in my own projects. I hope you find them useful as well!. The idea is to build a library of hooks that are easy to use, type safe, and functional.
+This project is a collection of React Hooks that I have found useful in my own projects. I hope you find them useful as well! The idea is to build a library of hooks that are easy to use, type safe, and functional.
 
 <!-- GETTING STARTED -->
 
@@ -78,98 +75,86 @@ npm i @julianfere/hooked
 
 ## useAsync
 
-  <h4>Overview</h4>
-    <p>useAsync is a custom React hook designed to simplify the management of asynchronous operations in React components. It provides a clean and consistent way to handle asynchronous function calls and their associated states.
-    </p>
-  <br/>
+<h4>Overview</h4>
+<p>Manages the full lifecycle of an async function — idle, pending, fulfilled, and rejected — with built-in abort handling and optional auto-execution.</p>
+<br/>
 
-  <h4>Example</h4>
+<h4>Example</h4>
 
 ```typescript
-import React from "react";
 import { useAsync } from "@julianfere/hooked";
 
-const fetchData = async () => {
-  // Your asynchronous operation here
-  // e.g., fetching data from an API
-};
-
-const BasicExampleAutomatic = () => {
-  const { state } = useAsync(() => fetchData());
+const MyComponent = () => {
+  const { data, status, loading, error, trigger, reset } = useAsync(
+    (signal: AbortSignal) =>
+      fetch("https://api.example.com/data", { signal }).then((r) => r.json())
+  );
 
   return (
     <>
-      {state === "pending" && <p>Loading...</p>}
-      {state === "fulfilled" && <p>Data loaded successfully!</p>}
-      {state === "rejected" && <p>Error loading data.</p>}
+      {loading && <p>Loading...</p>}
+      {status === "fulfilled" && <pre>{JSON.stringify(data, null, 2)}</pre>}
+      {status === "rejected" && <p>Error!</p>}
+      <button onClick={() => trigger()} disabled={loading}>Fetch</button>
+      <button onClick={reset}>Reset</button>
     </>
   );
 };
 
-const CompleteExampleManua = () => {
-  const [data, setData] = useState(null);
-
-  const { run, state } = useAsync(() => fetchData(), {
-    manual: true,
-    onSuccess: (data) => setData(data),
-    onError: (error) => console.log(error),
-  });
-
-  return (
-    <>
-      {state === "pending" && <p>Loading...</p>}
-      {state === "fulfilled" && <p>Data loaded successfully!</p>}
-      {state === "rejected" && <p>Error loading data.</p>}
-      <button onClick={run}>Fetch Data</button>
-    </>
+// Auto-execute on mount
+const AutoExample = () => {
+  const { data, loading } = useAsync(
+    (signal: AbortSignal) =>
+      fetch("https://api.example.com/data", { signal }).then((r) => r.json()),
+    { immediate: true }
   );
+
+  return loading ? <p>Loading...</p> : <pre>{JSON.stringify(data, null, 2)}</pre>;
 };
 ```
 
-  <h4>API</h4>
+<h4>API</h4>
 
 ```typescript
-const { run, state } = useAsync(() => asyncFunction(), options);
+const { trigger, reset, status, data, error, loading } = useAsync(fn, options);
 ```
 
-`asyncFunction`: The asynchronous function that will be executed.
-`options`: (Optional) Configuration options for the useAsync hook.
+`fn`: The async function to run. Receives an `AbortSignal` as the last argument.
 
 **Options**:
 
-`manual` (default: false): If set to true, the asynchronous function won't run automatically on component mount. You must call run manually. Otherwise, the asynchronous function will run automatically on component mount.
-
-`onSuccess`: A callback function that will be executed when the asynchronous function resolves successfully.
-
-`onError`: A callback function that will be executed when the asynchronous function encounters an error.
-
-`cancelable`: (default: true) If set to false, the asynchronous function will not be cancelable. If set to true, the asynchronous function will be cancelable. This means that if the component unmounts before the asynchronous function resolves, the asynchronous function will be canceled.
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `immediate` | `boolean` | `false` | Run `fn` automatically on mount |
+| `onSuccess` | `(data: T) => void` | — | Called when the promise resolves |
+| `onError` | `(error: unknown) => void` | — | Called when the promise rejects |
 
 **Returned Values**:
 
-`run`: A function that triggers the execution of the asynchronous function. If manual is set to true, this function will throw an error, reminding you to set manual to true.
+| Property | Type | Description |
+|----------|------|-------------|
+| `status` | `"idle" \| "pending" \| "fulfilled" \| "rejected"` | Current lifecycle state |
+| `data` | `T \| undefined` | Resolved value |
+| `error` | `unknown \| undefined` | Rejection reason |
+| `loading` | `boolean` | `true` while `status === "pending"` |
+| `trigger` | `(...args) => Promise<void>` | Manually fire the async function |
+| `reset` | `() => void` | Reset state back to `idle` |
 
-`state`: A string representing the current state of the asynchronous operation. Possible values are **idle**, **pending**, **fulfilled**, or **rejected**.
-
-  </section>
-</section>
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
 ## useDebounce
 
-  <h4>Overview</h4>
-    <p>useDebounce is a custom React hook designed to simplify the management of debounced values in React components. It provides a clean and consistent way to handle debounced values and their associated states.
-    </p>
-  <br/>
+<h4>Overview</h4>
+<p>Returns a debounced copy of a value — the copy only updates after the specified delay has elapsed since the last change.</p>
+<br/>
 
 <h4>Example</h4>
-  
-  
-  ```typescript
-import React, { useState } from "react";
 
-import { useDebounce } from "@hooks";
+```typescript
+import { useState, useEffect } from "react";
+import { useDebounce } from "@julianfere/hooked";
 
 const BasicExample = () => {
   const [value, setValue] = useState("");
@@ -184,435 +169,346 @@ const BasicExample = () => {
         value={value}
         onChange={(e) => setValue(e.target.value)}
       />
-
       <p>Debounced value: {debouncedValue}</p>
     </>
   );
 };
-
-````
-
-<h4>API</h4>
-
-```typescript
-const debouncedValue = useDebounce(value, delay);
-````
-
-`value`: The value to be debounced.
-
-`delay`: The delay in milliseconds to wait before updating the debounced value. Defaults to 500ms.
-
-<p align="right">(<a href="#hooks">back to hooks</a>)</p>
-
-## useThrottle
-
-  <h4>Overview</h4>
-    <p>useThrottle is a custom React hook designed to simplify the management of throttled values in React components. It provides a clean and consistent way to handle throttled values and their associated states.
-    </p>
-  <br/>
-
-  <h4>Example</h4>
-  
-  ```typescript
-import React, { useState } from "react";
-
-import { useThrottle } from "@hooks";
-
-const BasicExample = () => {
-    const [value, setValue] = useState("");
-    const throttledValue = useThrottle(value, 500);
-
-    useEffect(() => { makeApiCall(throttledValue); }, [throttledValue]);
-
-    return (
-      <>
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-        />
-        <p>Throttled value: {throttledValue}</p>
-      </>
-    );
-};
-
-````
-
-<h4>API</h4>
-
-```typescript
-const throttledValue = useThrottle(value, delay);
-````
-
-`value`: The value to be throttled.
-
-`delay`: The delay in milliseconds to wait before updating the throttled value. Defaults to 500ms.
-
-<p align="right">(<a href="#hooks">back to hooks</a>)</p>
-
-## useLocalStorage
-
-  <h4>Overview</h4>
-    <p>useLocalStorage is a custom React hook designed to simplify the management of local storage in React components. It provides a clean and consistent way to handle local storage and its associated states.
-    </p>
-  <br/>
-
-  <h4>Example</h4>
-  
-  ```typescript
-import { useLocalStorage } from "@hooks";
-
-type UseLocalStorageType = {
-name: string;
-age: number;
-}
-
-const BasicExample = () => {
-    const { getItem, setItem, removeItem, hasItem, clear } = useLocalStorage<UseLocalStorageType>();
-    const [key, setKey] = useState("");
-    const [value, setValue] = useState("");
-
-    return (
-      <>
-        <input onChange={(e) => setKey(e.value)} />
-        <input onChange={(e) => setValue(e.value)} />
-        <p>{key} is {getItem(key)}</p>
-        <button onClick={() => setItem(key, value)}>Set Item</button>
-        <button onClick={() => removeItem(key)}>Remove Item</button>
-        <button onClick={() => clear()}>Clear</button>
-      </>
-    );
-};
-
-````
-
-  <h4>API</h4>
-
-```typescript
-const { getItem, setItem, removeItem, hasItem, clear } = useLocalStorage<T>();
-````
-
-`T`: The type of the value to be stored in local storage.
-
-**Returned Values**:
-`getItem`: A function that retrieves the value associated with the specified key from local storage.
-`setItem`: A function that stores the specified value in local storage, associated with the specified key.
-`removeItem`: A function that removes the specified key and its associated value from local storage.
-`hasItem`: A function that returns true if the specified key exists in local storage, and false otherwise.
-`clear`: A function that removes all keys and their associated values from local storage.
-
-<p align="right">(<a href="#hooks">back to hooks</a>)</p>
-
-## useDelay
-
-  <h4>Overview</h4>
-    <p>useDelay is a custom React hook designed to simplify the management of delayed values in React components. It provides a clean and consistent way to handle delayed values and their associated states.
-    </p>
-  <br/>
-
-  <h4>Example</h4>
-  
-  ```typescript
-import {useDelay} from "@hooks";
-
-const BasicExample = () => {
-    const [value, setValue] = useState("");
-
-    const updateValue = (val: string) => setValue(val)
-
-    useDelay(() => updateValue("Delayed value"));
-
-    const runDelay = useDelay(() => updateValue("Manual value"), {manual: true, delay: 1000});
-
-    return <h1>Delayed Value: {value}</h1>
-}
 ```
 
 <h4>API</h4>
 
 ```typescript
 const debouncedValue = useDebounce(value, delay);
-````
+```
 
-`value`: The value to be debounced.
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `value` | `T` | — | The value to debounce |
+| `delay` | `number` | `500` | Milliseconds to wait after the last change |
 
-`delay`: The delay in milliseconds to wait before updating the debounced value. Defaults to 500ms.
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-<p align="right">(<a href="#hooks">back to hooks</a>)</p>
+---
 
 ## useThrottle
 
-  <h4>Overview</h4>
-    <p>useThrottle is a custom React hook designed to simplify the management of throttled values in React components. It provides a clean and consistent way to handle throttled values and their associated states.
-    </p>
-  <br/>
+<h4>Overview</h4>
+<p>Returns a throttled copy of a value. The first change within an interval passes through immediately, and the last change within that window is emitted at the end of the interval.</p>
+<br/>
 
-  <h4>Example</h4>
-  
-  ```typescript
-import React, { useState } from "react";
+<h4>Example</h4>
 
-import { useThrottle } from "@hooks";
+```typescript
+import { useState, useEffect } from "react";
+import { useThrottle } from "@julianfere/hooked";
 
 const BasicExample = () => {
-    const [value, setValue] = useState("");
-    const throttledValue = useThrottle(value, 500);
+  const [value, setValue] = useState("");
+  const throttledValue = useThrottle(value, 500);
 
-    useEffect(() => { makeApiCall(throttledValue); }, [throttledValue]);
+  useEffect(() => { makeApiCall(throttledValue); }, [throttledValue]);
 
-    return (
-      <>
-        <input
+  return (
+    <>
+      <input
         type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        />
-        <p>Throttled value: {throttledValue}</p>
-      </>
-    );
+      />
+      <p>Throttled value: {throttledValue}</p>
+    </>
+  );
 };
-
-````
+```
 
 <h4>API</h4>
 
 ```typescript
-const throttledValue = useThrottle(value, delay);
-````
+const throttledValue = useThrottle(value, interval);
+```
 
-`value`: The value to be throttled.
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `value` | `T` | — | The value to throttle |
+| `interval` | `number` | `500` | Window size in milliseconds |
 
-`delay`: The delay in milliseconds to wait before updating the throttled value. Defaults to 500ms.
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-<p align="right">(<a href="#hooks">back to hooks</a>)</p>
+---
 
 ## useLocalStorage
 
-  <h4>Overview</h4>
-    <p>useLocalStorage is a custom React hook designed to simplify the management of local storage in React components. It provides a clean and consistent way to handle local storage and its associated states.
-    </p>
-  <br/>
+<h4>Overview</h4>
+<p>Provides fully typed access to <code>localStorage</code> with automatic JSON serialisation and deserialisation.</p>
+<br/>
 
-  <h4>Example</h4>
-  
-  ```typescript
-import { useLocalStorage } from "@hooks";
+<h4>Example</h4>
 
-type UseLocalStorageType = {
+```typescript
+import { useLocalStorage } from "@julianfere/hooked";
+
+interface MyStorage {
   name: string;
   age: number;
 }
 
 const BasicExample = () => {
-    const { getItem, setItem, removeItem, hasItem, clear } = useLocalStorage<UseLocalStorageType>();
-    const [key, setKey] = useState("");
-    const [value, setValue] = useState("");
+  const { getItem, setItem, removeItem, hasItem, clear } = useLocalStorage<MyStorage>();
 
-    return (
-      <>
-        <input onChange={(e) => setKey(e.value)} />
-        <input onChange={(e) => setValue(e.value)} />
-        <p>{key} is {getItem(key)}</p>
-        <button onClick={() => setItem(key, value)}>Set Item</button>
-        <button onClick={() => removeItem(key)}>Remove Item</button>
-        <button onClick={() => clear()}>Clear</button>
-      </input>
-    );
+  return (
+    <>
+      <p>Has name: {String(hasItem("name"))}</p>
+      <p>Name: {getItem("name") ?? "—"}</p>
+      <button onClick={() => setItem("name", "Alice")}>Set name</button>
+      <button onClick={() => removeItem("name")}>Remove name</button>
+      <button onClick={clear}>Clear all</button>
+    </>
+  );
 };
+```
 
-````
-
-  <h4>API</h4>
+<h4>API</h4>
 
 ```typescript
 const { getItem, setItem, removeItem, hasItem, clear } = useLocalStorage<T>();
-````
+```
 
-`T`: The type of the value to be stored in local storage.
+`T`: Your storage schema as a generic for full type safety.
 
 **Returned Values**:
-`getItem`: A function that retrieves the value associated with the specified key from local storage.
 
-`setItem`: A function that stores the specified value in local storage, associated with the specified key.
+| Method | Description |
+|--------|-------------|
+| `getItem(key)` | Returns the typed value or `null` if not set |
+| `setItem(key, value)` | Serialises and stores the value |
+| `removeItem(key)` | Removes the key from storage |
+| `hasItem(key)` | Returns `true` if the key exists |
+| `clear()` | Removes all keys from storage |
 
-`removeItem`: A function that removes the specified key and its associated value from local storage.
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-`hasItem`: A function that returns true if the specified key exists in local storage, and false otherwise.
-
-`clear`: A function that removes all keys and their associated values from local storage.
-
-<p align="right">(<a href="#hooks">back to hooks</a>)</p>
+---
 
 ## useDelay
 
-  <h4>Overview</h4>
-    <p>useDelay is a custom React hook designed to simplify the management of delayed values in React components. It provides a clean and consistent way to handle delayed values and their associated states.
-    </p>
-  <br/>
+<h4>Overview</h4>
+<p>Executes a callback after a configurable delay. Supports both automatic execution on mount and manual trigger mode.</p>
+<br/>
 
-  <h4>Example</h4>
-  
-  ```typescript
-  import {useDelay} from "@hooks";
-
-const BasicExample = () => {
-const [value, setValue] = useState("");
-
-    const updateValue = (val: string)=> {
-      setValue(val);
-    }
-
-    useDelay(() => updateValue("Delayed value"));
-
-    const runDelay = useDelay(() => updateValue("Manual value"), {manual: true, delay: 1000});
-
-    return (
-      <>
-        <button onClick={runDelay}>Run manual delay</button>
-        <p>Delayed value: {delayedValue}</p>
-      </>
-    );
-
-};
-
-````
-
-  <h4>API</h4>
+<h4>Example</h4>
 
 ```typescript
-const delayedValue = useDelay(callback, options);
-````
+import { useState } from "react";
+import { useDelay } from "@julianfere/hooked";
 
-`callback`: The function to be delayed.
-`options`: (Optional) Configuration options for the useDelay hook.
+const BasicExample = () => {
+  const [message, setMessage] = useState("Waiting…");
 
-- `manual` (default: false): If set to true, the delayed function won't run automatically on component mount. You must call run manually. Otherwise, the delayed function will run automatically on component mount.
-- `delay`: The delay in milliseconds to wait before running the delayed function. Defaults to 250ms.
+  const trigger = useDelay(
+    () => setMessage("Fired after 1 second!"),
+    { delay: 1000, manual: true }
+  );
 
-**Returned Values**:
+  return (
+    <>
+      <p>{message}</p>
+      <button onClick={() => { setMessage("Waiting…"); trigger?.(); }}>
+        Run delay
+      </button>
+    </>
+  );
+};
+```
 
-`run`: A function that triggers the execution of the delayed function. If manual is set to true, this function will throw an error, reminding you to set manual to true.
+<h4>API</h4>
 
-<p align="right">(<a href="#hooks">back to hooks</a>)</p>
+```typescript
+const trigger = useDelay(callback, options);
+```
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `delay` | `number` | `250` | Milliseconds before the callback fires |
+| `manual` | `boolean` | `false` | When `true`, returns a trigger function instead of auto-executing |
+
+**Returned Value**: A trigger function when `manual: true`, otherwise a no-op.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+---
 
 ## useDocumentTitle
 
-  <h4>Overview</h4>
-    <p>useDocumentTitle is a custom React hook designed to simplify the management of the document title in React components. It provides a clean and consistent way to handle the document title and its associated states.
-    </p>
-  <br/>
+<h4>Overview</h4>
+<p>Sets <code>document.title</code> declaratively and restores the original title on unmount.</p>
+<br/>
 
-  <h4>Example</h4>
-  
-  ```typescript
-  import {useDocumentTitle} from "@hooks";
+<h4>Example</h4>
+
+```typescript
+import { useDocumentTitle } from "@julianfere/hooked";
 
 const BasicExample = () => {
-useDocumentTitle("New Title");
+  useDocumentTitle("My Page Title");
 
-    return (
-      <>
-        <p>Document title has been updated to "New Title"</p>
-      </>
-    );
-
+  return <p>Document title has been updated.</p>;
 };
+```
 
-````
-
-  <h4>API</h4>
+<h4>API</h4>
 
 ```typescript
 useDocumentTitle(title, persistOnUnmount);
-````
+```
 
-`title`: The new title for the document.
-`persistOnUnmount`: (Optional) If set to true, the document title will persist after the component unmounts. Defaults to false.
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `title` | `string` | — | The new title for the document |
+| `persistOnUnmount` | `boolean` | `false` | When `true`, the title is not restored on unmount |
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+---
+
+## useQueryParams
+
+<h4>Overview</h4>
+<p>Read and write URL query parameters with full type safety. Automatically stays in sync with browser navigation.</p>
+<br/>
+
+<h4>Example</h4>
+
+```typescript
+import { useQueryParams } from "@julianfere/hooked";
+
+interface SearchParams {
+  q: string;
+  page: number;
+}
+
+const SearchPage = () => {
+  const { get, set, clear } = useQueryParams<SearchParams>();
+  const { q = "", page = 1 } = get("q", "page");
+
+  return (
+    <div>
+      <input value={q} onChange={(e) => set({ q: e.target.value, page: 1 })} />
+      <button onClick={() => set({ page: page + 1 })}>Next page</button>
+      <button onClick={clear}>Clear filters</button>
+    </div>
+  );
+};
+```
+
+<h4>API</h4>
+
+```typescript
+const { get, set, build, clear, pathname, search } = useQueryParams<T>();
+```
+
+| Method / Property | Description |
+|-------------------|-------------|
+| `get(...keys)` | Returns an object with the requested params, auto-casting to `boolean`, `number`, or parsed JSON |
+| `set(params, url?)` | Pushes updated params to the URL |
+| `build(params)` | Returns a query string without navigating |
+| `clear()` | Removes all query params from the URL |
+| `pathname` | Current `location.pathname` |
+| `search` | Current `location.search` |
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+---
+
+<!-- CONTEXT -->
+
+## Hooks with context
 
 ## EventContext
 
 <h4>Overview</h4>
-  <p>EventContext is a custom context with a generic type that allows you to create a global event emitter in your React application. It provides a clean and consistent way to handle global events and their associated states.
-  </p>
+<p>A factory function that creates a fully typed pub/sub event system backed by React Context. Import it from the dedicated entry point.</p>
 <br/>
 
 <h4>Example</h4>
 
 ```typescript
 import { factory } from "@julianfere/hooked/events";
-import { User, Post } from "./entitites";
 
 interface AppEvents {
-  userLoggedIn: User;
+  userLoggedIn: { id: string; name: string };
   userLoggedOut: never;
-  postCreated: Post;
+  cartUpdated: { itemCount: number };
 }
 
-// this creates the factory for the context, provider, and hook with the specified events passed as a generic type
-const { createEventContext, createEventHook, createEventProvider } =
+const { createEventContext, createEventProvider, createEventHook } =
   factory<AppEvents>();
 
-// this creates the context, provider, and hook with the specified events passed as a generic type
+const EventCtx = createEventContext();
+export const EventsProvider = createEventProvider(EventCtx);
+export const useEvents = createEventHook(EventCtx);
 
-const EventContext = createEventContext();
-const EventsProvider = createEventProvider(EventContext);
-export const useEvents = createEventHook(EventContext);
+// Wrap your app
+const App = () => (
+  <EventsProvider>
+    <UserComponent />
+    <NotificationComponent />
+  </EventsProvider>
+);
 
-const App = () => {
+// Publish events
+const UserComponent = () => {
+  const { publish } = useEvents();
+
   return (
-    <EventsProvider>
-      <UserComponent />
-      <PostComponent />
-    </EventsProvider>
+    <button onClick={() => publish("userLoggedIn", { id: "1", name: "Alice" })}>
+      Log in
+    </button>
   );
 };
 
-const UserComponent = () => {
-  const { emit } = useEvents();
+// Subscribe to events
+const NotificationComponent = () => {
+  const { subscribe } = useEvents();
 
-  const handleLogin = (user: User) => {
-    emit("userLoggedIn", user);
-  };
+  useEffect(() => {
+    return subscribe("userLoggedIn", ({ name }) => {
+      console.log(`Welcome, ${name}!`);
+    });
+  }, [subscribe]);
 
-  const handleLogout = () => {
-    emit("userLoggedOut");
-  };
-
-  return (
-    <>
-      <button onClick={() => handleLogin({ name: "John Doe" })}>Login</button>
-      <button onClick={handleLogout}>Logout</button>
-    </>
-  );
+  return <nav>…</nav>;
 };
 ```
 
 <h4>API</h4>
 
 ```typescript
-const { createEventContext, createEventHook, createEventProvider } =
+const { createEventContext, createEventProvider, createEventHook } =
   factory<AppEvents>();
 ```
 
-`createEventContext`: A function that creates the context for the event emitter.
+| Function | Description |
+|----------|-------------|
+| `createEventContext()` | Creates the context object |
+| `createEventProvider(ctx)` | Returns a provider component to wrap your tree |
+| `createEventHook(ctx)` | Returns the hook for use in components |
 
-`createEventHook`: A function that creates a hook for the event emitter.
-
-`createEventProvider`: A function that creates a provider for the event emitter.
-
-`factory`: A factory function that returns the createEventContext, createEventHook, and 
-createEventProvider functions with the specified events passed as a generic type.
-
-<h4>Hook API</h4>
+**Hook API**:
 
 ```typescript
-const { subscribe, emit } = useEvents();
+const { publish, subscribe } = useEvents();
 ```
 
-`subscribe`: A function for subscribing to an event. it takes the event name and a callback function as arguments. It will return a callback to unsubscribe from the event.
-`emit`: A function that emits an event. It takes the event name and as a second argument the payload matching the type of the context.
+| Method | Description |
+|--------|-------------|
+| `publish(event, payload)` | Emits an event to all current subscribers |
+| `subscribe(event, callback)` | Registers a listener. Returns an unsubscribe function |
 
-<p align="right">(<a href="#hooks">back to hooks</a>)</p>
+`useEvents()` throws if called outside of its `EventsProvider`.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+---
 
 <!-- CONTRIBUTING -->
 
@@ -635,7 +531,7 @@ Don't forget to give the project a star! Thanks again!
 
 ## License
 
-Distributed under the MIT License. See `LICENSE.txt` for more information.
+Distributed under the MIT License. See `LICENSE` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

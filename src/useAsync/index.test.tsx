@@ -191,6 +191,23 @@ describe("useAsync", () => {
     expect(onSuccessV2).toHaveBeenCalledWith("data");
   });
 
+  it("passes an AbortSignal (not a wrapped object) as the last argument", async () => {
+    let receivedSignal: unknown;
+    const asyncFunction = (signal: unknown) => {
+      receivedSignal = signal;
+      return Promise.resolve("ok");
+    };
+
+    const { result } = renderHook(() => useAsync(asyncFunction));
+
+    await act(async () => {
+      result.current.trigger();
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(receivedSignal).toBeInstanceOf(AbortSignal);
+  });
+
   it("does not call onSuccess after unmount", async () => {
     const onSuccess = vi.fn();
 
