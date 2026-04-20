@@ -11,6 +11,7 @@ export default defineConfig({
   entry: {
     index: "src/index.ts",
     events: "src/EventContext/index.ts",
+    authentication: "src/Authentication/index.ts",
   },
   experimentalDts: true, // Generate .d.ts file in dist folder
   name: "Hooked",
