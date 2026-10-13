@@ -29,32 +29,39 @@
     "dev": "vitest",
     "test": "vitest run",
     "lint": "tsc",
-    "ci": "yarn lint && yarn test && yarn build",
-    "release": "yarn lint && yarn test && yarn build && changeset publish",
-    "docs:dev": "cd docs && npm run start",
-    "docs:build": "cd docs && npm run build",
-    "playground": "npm run build && cd playground && npm run dev",
-    "e2e": "npm run build && cd playground && npm run e2e"
+    "ci": "pnpm lint && pnpm test && pnpm build",
+    "release": "pnpm lint && pnpm test && pnpm build && changeset publish",
+    "docs:dev": "pnpm --dir docs start",
+    "docs:build": "pnpm --dir docs build",
+    "playground": "pnpm build && pnpm --dir playground dev",
+    "e2e": "pnpm build && pnpm --dir playground e2e"
   },
-  "dependencies": {
-    "react": "^18.2.0"
+  "peerDependencies": {
+    "react": "^19.2.0"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.1",
     "@microsoft/api-extractor": "^7.43.1",
-    "@testing-library/react": "^14.1.2",
-    "@types/react": "^18.2.37",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/react": "^16.3.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
     "@typescript-eslint/eslint-plugin": "^6.10.0",
     "@typescript-eslint/parser": "^6.10.0",
-    "@vitejs/plugin-react": "^4.2.1",
     "eslint": "^8.53.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.4",
     "happy-dom": "^12.10.3",
-    "react-dom": "^18.2.0",
-    "react-testing-library": "^8.0.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "tsup": "^8.0.1",
     "typescript": "^5.2.2",
     "vitest": "^1.0.4"
+  },
+  "packageManager": "pnpm@10.33.4",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }

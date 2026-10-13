@@ -14,11 +14,9 @@ import { factory } from "@julianfere/hooked/events";
 interface AppEvents {
   ping: { msg: string };
 }
-const { createEventContext, createEventProvider, createEventHook } =
-  factory<AppEvents>();
-const EventCtx = createEventContext();
-const EventsProvider = createEventProvider(EventCtx);
-const useEvents = createEventHook(EventCtx);
+const { createEventProvider, createEventHook } = factory<AppEvents>();
+const EventsProvider = createEventProvider();
+const useEvents = createEventHook();
 
 // ─── useAsync ─────────────────────────────────────────────────────────────────
 interface Todo {
