@@ -16,4 +16,9 @@ export {
   useQueryParams,
 };
 
-export type { AsyncState, UseAsyncOptions } from "./useAsync/types";
+export type {
+  AsyncFunction,
+  AsyncState,
+  TriggerArgs,
+  UseAsyncOptions,
+} from "./useAsync/types";

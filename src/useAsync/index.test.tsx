@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, expectTypeOf, it, vi } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 
 import useAsync from ".";
@@ -15,7 +15,7 @@ describe("useAsync", () => {
 
   it("returns trigger, reset, status, data, error and loading", () => {
     const { result } = renderHook(() =>
-      useAsync((arg: string) => Promise.resolve(arg))
+      useAsync((_signal, arg: string) => Promise.resolve(arg))
     );
 
     expect(result.current.trigger).toBeInstanceOf(Function);
@@ -28,14 +28,14 @@ describe("useAsync", () => {
 
   it("starts in idle state", () => {
     const { result } = renderHook(() =>
-      useAsync((arg: string) => Promise.resolve(arg))
+      useAsync((_signal, arg: string) => Promise.resolve(arg))
     );
 
     expect(result.current.status).toBe("idle");
   });
 
   it("transitions to pending while running", async () => {
-    const asyncFunction = (arg: string, _signal?: AbortSignal) =>
+    const asyncFunction = (_signal: AbortSignal, arg: string) =>
       new Promise<string>((resolve) => setTimeout(() => resolve(arg), 1000));
 
     const { result } = renderHook(() => useAsync(asyncFunction));
@@ -49,7 +49,7 @@ describe("useAsync", () => {
   });
 
   it("transitions to fulfilled and exposes data", async () => {
-    const asyncFunction = (arg: string, _signal?: AbortSignal) =>
+    const asyncFunction = (_signal: AbortSignal, arg: string) =>
       new Promise<string>((resolve) => setTimeout(() => resolve(arg), 1000));
 
     const { result } = renderHook(() => useAsync(asyncFunction));
@@ -191,7 +191,7 @@ describe("useAsync", () => {
     expect(onSuccessV2).toHaveBeenCalledWith("data");
   });
 
-  it("passes an AbortSignal (not a wrapped object) as the last argument", async () => {
+  it("passes an AbortSignal (not a wrapped object) as the first argument", async () => {
     let receivedSignal: unknown;
     const asyncFunction = (signal: AbortSignal) => {
       receivedSignal = signal;
@@ -208,10 +208,10 @@ describe("useAsync", () => {
     expect(receivedSignal).toBeInstanceOf(AbortSignal);
   });
 
-  it("passes user args before the AbortSignal", async () => {
+  it("passes user args after the AbortSignal", async () => {
     let receivedArgs: unknown[] = [];
-    const asyncFunction = (a: string, b: number, signal: AbortSignal) => {
-      receivedArgs = [a, b, signal];
+    const asyncFunction = (signal: AbortSignal, a: string, b: number) => {
+      receivedArgs = [signal, a, b];
       return Promise.resolve("ok");
     };
 
@@ -222,9 +222,9 @@ describe("useAsync", () => {
       vi.advanceTimersByTime(1000);
     });
 
-    expect(receivedArgs[0]).toBe("hello");
-    expect(receivedArgs[1]).toBe(42);
-    expect(receivedArgs[2]).toBeInstanceOf(AbortSignal);
+    expect(receivedArgs[0]).toBeInstanceOf(AbortSignal);
+    expect(receivedArgs[1]).toBe("hello");
+    expect(receivedArgs[2]).toBe(42);
   });
 
   it("trigger() accepts no args when fn only takes a signal", async () => {
@@ -280,5 +280,79 @@ describe("useAsync", () => {
     });
 
     expect(onSuccess).not.toHaveBeenCalled();
+  });
+
+  it("does not shift the signal into optional parameters", async () => {
+    let received: unknown[] = [];
+    const asyncFunction = (
+      signal: AbortSignal,
+      id: string,
+      options?: { verbose: boolean }
+    ) => {
+      received = [signal, id, options];
+      return Promise.resolve(id);
+    };
+
+    const { result } = renderHook(() => useAsync(asyncFunction));
+
+    await act(async () => {
+      result.current.trigger("42");
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(received[0]).toBeInstanceOf(AbortSignal);
+    expect(received[1]).toBe("42");
+    expect(received[2]).toBeUndefined();
+  });
+});
+
+describe("useAsync types", () => {
+  it("trigger takes no args when fn takes none", () => {
+    const { result } = renderHook(() => useAsync(() => Promise.resolve(1)));
+
+    expectTypeOf(result.current.trigger).parameters.toEqualTypeOf<[]>();
+  });
+
+  it("trigger takes no args when fn only takes the signal", () => {
+    const { result } = renderHook(() =>
+      useAsync((_signal: AbortSignal) => Promise.resolve(1))
+    );
+
+    expectTypeOf(result.current.trigger).parameters.toEqualTypeOf<[]>();
+  });
+
+  it("trigger takes every argument after the signal", () => {
+    const { result } = renderHook(() =>
+      useAsync((_signal, id: string, page: number) => Promise.resolve({ id, page }))
+    );
+
+    expectTypeOf(result.current.trigger).parameters.toEqualTypeOf<
+      [id: string, page: number]
+    >();
+  });
+
+  it("keeps optional arguments optional", () => {
+    const { result } = renderHook(() =>
+      useAsync((_signal, id: string, verbose?: boolean) =>
+        Promise.resolve(verbose ? id : "")
+      )
+    );
+
+    expectTypeOf(result.current.trigger).parameters.toEqualTypeOf<
+      [id: string, verbose?: boolean]
+    >();
+  });
+
+  it("infers data from the resolved value", () => {
+    const { result } = renderHook(() =>
+      useAsync((_signal, id: string) => Promise.resolve({ id }))
+    );
+
+    expectTypeOf(result.current.data).toEqualTypeOf<{ id: string } | undefined>();
+  });
+
+  it("rejects functions whose first parameter is not a signal", () => {
+    // @ts-expect-error the first parameter must accept an AbortSignal
+    renderHook(() => useAsync((id: string) => Promise.resolve(id)));
   });
 });

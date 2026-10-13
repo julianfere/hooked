@@ -20,3 +20,17 @@ export type UseAsyncOptions<T> = Partial<{
   onSuccess: (data: T) => void;
   onError: (error: unknown) => void;
 }>
+
+/**
+ * An async function that receives an AbortSignal first, followed by its own arguments.
+ */
+export type AsyncFunction = (signal: AbortSignal, ...args: any[]) => Promise<any>;
+
+/**
+ * Arguments accepted by `trigger`: every parameter of `fn` except the leading AbortSignal.
+ */
+export type TriggerArgs<F extends AsyncFunction> = Parameters<F> extends []
+  ? []
+  : Parameters<F> extends [any?, ...infer Rest]
+  ? Rest
+  : [];
