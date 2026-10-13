@@ -6,5 +6,5 @@
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true
   },
-  "include": ["vitest.config.ts", "tsup.config.ts"]
+  "include": ["vitest.config.mts", "tsup.config.ts"]
 }
