@@ -14,10 +14,17 @@ Ejecuta un callback tras un retardo configurable. Soporta ejecución automática
 ## Firma
 
 ```ts
+// Modo automático
 function useDelay(
   callback: () => void,
-  options?: { delay?: number; manual?: boolean }
-): () => void | undefined
+  options?: { delay?: number; manual?: false }
+): () => void;
+
+// Modo manual
+function useDelay(
+  callback: () => void,
+  options: { delay?: number; manual: true }
+): () => () => void;
 ```
 
 ## Opciones
@@ -31,10 +38,19 @@ function useDelay(
 
 | Modo | Retorno | Descripción |
 |------|---------|-------------|
-| `manual: false` | `() => {}` | No-op (se auto-ejecuta al montar) |
-| `manual: true` | `() => void \| undefined` | Llamá a esta función para iniciar la ejecución retardada |
+| `manual: false` | `() => void` | No-op (se auto-ejecuta al montar) |
+| `manual: true` | `() => () => void` | Llamala para programar el callback. Devuelve una función que cancela esa ejecución |
 
-La función de limpieza también puede cancelar un timeout pendiente si se llama antes de que transcurra el retardo.
+- El callback siempre se ejecuta con su última versión, así que podés usar funciones inline.
+- En modo automático, el timer se reinicia cuando cambia `delay`.
+- Los timers pendientes, en los dos modos, se limpian cuando el componente se desmonta.
+
+```ts
+const ejecutar = useDelay(guardar, { delay: 1000, manual: true });
+
+const cancelar = ejecutar(); // programa guardar() en 1 s
+cancelar();                  // cancela esa ejecución
+```
 
 ## Ejemplo interactivo
 
@@ -54,7 +70,7 @@ export default function App() {
   return (
     <div style={{ padding: 24, fontFamily: "sans-serif" }}>
       <p>{message}</p>
-      <button onClick={() => { setMessage("Esperando…"); trigger?.(); }}>
+      <button onClick={() => { setMessage("Esperando…"); trigger(); }}>
         Disparar (1 s de retardo)
       </button>
     </div>

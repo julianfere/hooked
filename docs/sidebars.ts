@@ -3,6 +3,7 @@ import type { SidebarsConfig } from "@docusaurus/plugin-content-docs";
 const sidebars: SidebarsConfig = {
   docsSidebar: [
     "intro",
+    "migration/v1",
     {
       type: "category",
       label: "Hooks",

@@ -8,6 +8,7 @@ import {
   SandpackConsole,
 } from "@codesandbox/sandpack-react";
 import { useColorMode } from "@docusaurus/theme-common";
+import { useDocsVersion } from "@docusaurus/plugin-content-docs/client";
 import type { SandpackFile } from "@codesandbox/sandpack-react";
 
 interface HookPlaygroundProps {
@@ -17,12 +18,29 @@ interface HookPlaygroundProps {
   showConsole?: boolean;
 }
 
+/**
+ * Resolves the npm dependencies for the docs version being viewed, so each
+ * versioned page runs against the library release it documents.
+ */
+function getDependencies(docsVersion: string): Record<string, string> {
+  // "current" is the unreleased "Next" docs: run against the newest release
+  if (docsVersion === "current") {
+    return { react: "^19.0.0", "react-dom": "^19.0.0", "@julianfere/hooked": "latest" };
+  }
+
+  const major = Number(docsVersion.split(".")[0]);
+  const react = major >= 1 ? "^19.0.0" : "^18.3.1";
+
+  return { react, "react-dom": react, "@julianfere/hooked": docsVersion };
+}
+
 function Playground({
   code,
   extraFiles = {},
   previewHeight = 320,
   showConsole = false,
-}: HookPlaygroundProps) {
+  dependencies,
+}: HookPlaygroundProps & { dependencies: Record<string, string> }) {
   const { colorMode } = useColorMode();
 
   return (
@@ -31,13 +49,7 @@ function Playground({
         template="react-ts"
         theme={colorMode === "dark" ? "dark" : "light"}
         customSetup={{
-          dependencies: {
-            // Pin React versions explicitly to prevent duplicate React instances
-            // (@julianfere/hooked has react as a regular dep, not peerDep)
-            "react": "^18.3.1",
-            "react-dom": "^18.3.1",
-            "@julianfere/hooked": "latest",
-          },
+          dependencies,
         }}
         files={{
           "/App.tsx": { code, active: true },
@@ -68,9 +80,12 @@ function Playground({
 }
 
 export default function HookPlayground(props: HookPlaygroundProps) {
+  const { version } = useDocsVersion();
+  const dependencies = getDependencies(version);
+
   return (
     <BrowserOnly fallback={<div>Loading playground...</div>}>
-      {() => <Playground {...props} />}
+      {() => <Playground {...props} dependencies={dependencies} />}
     </BrowserOnly>
   );
 }

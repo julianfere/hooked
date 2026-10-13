@@ -15,3 +15,10 @@ export {
   useDocumentTitle,
   useQueryParams,
 };
+
+export type {
+  AsyncFunction,
+  AsyncState,
+  TriggerArgs,
+  UseAsyncOptions,
+} from "./useAsync/types";

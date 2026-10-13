@@ -14,10 +14,17 @@ Executes a callback after a configurable delay. Supports both automatic executio
 ## Signature
 
 ```ts
+// Automatic mode
 function useDelay(
   callback: () => void,
-  options?: { delay?: number; manual?: boolean }
-): () => void | undefined
+  options?: { delay?: number; manual?: false }
+): () => void;
+
+// Manual mode
+function useDelay(
+  callback: () => void,
+  options: { delay?: number; manual: true }
+): () => () => void;
 ```
 
 ## Options
@@ -31,10 +38,19 @@ function useDelay(
 
 | Mode | Return | Description |
 |------|--------|-------------|
-| `manual: false` | `() => {}` | No-op (auto-executes on mount) |
-| `manual: true` | `() => void \| undefined` | Call this to start the delayed execution |
+| `manual: false` | `() => void` | No-op (auto-executes on mount) |
+| `manual: true` | `() => () => void` | Call it to schedule the callback. It returns a function that cancels that run |
 
-The cleanup function can also cancel a pending timeout if called before the delay elapses.
+- The callback always runs with its latest version, so inline functions are fine.
+- In automatic mode, the timer restarts when `delay` changes.
+- Pending timers, in both modes, are cleared when the component unmounts.
+
+```ts
+const run = useDelay(save, { delay: 1000, manual: true });
+
+const cancel = run(); // schedules save() in 1 s
+cancel();             // cancels that run
+```
 
 ## Live example
 
@@ -54,7 +70,7 @@ export default function App() {
   return (
     <div style={{ padding: 24, fontFamily: "sans-serif" }}>
       <p>{message}</p>
-      <button onClick={() => { setMessage("Waiting…"); trigger?.(); }}>
+      <button onClick={() => { setMessage("Waiting…"); trigger(); }}>
         Trigger (1 s delay)
       </button>
     </div>

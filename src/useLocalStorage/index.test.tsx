@@ -102,6 +102,22 @@ describe("useLocalStoraga<LocalStorageType>", () => {
     expect(result.current.getItem("token")).toBe("123");
   });
 
+  it("should return null if the stored value is not valid JSON", () => {
+    getItemMock.mockReturnValue("{not json");
+
+    const { result } = renderHook(() => useLocalStoraga<LocalStorageType>());
+
+    expect(result.current.getItem("user")).toBeNull();
+  });
+
+  it("should report an item stored as an empty string as existing", () => {
+    getItemMock.mockReturnValue("");
+
+    const { result } = renderHook(() => useLocalStoraga<LocalStorageType>());
+
+    expect(result.current.hasItem("token")).toBe(true);
+  });
+
   it("should throw an error if localStorage is not available", () => {
     Object.defineProperty(window, "localStorage", { value: null });
 

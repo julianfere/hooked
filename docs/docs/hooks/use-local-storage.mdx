@@ -43,11 +43,15 @@ storage.setItem("theme", "blue");           // ❌ Type error
 
 | Method | Description |
 |--------|-------------|
-| `getItem(key)` | Returns the typed value or `null` if not set |
+| `getItem(key)` | Returns the typed value, or `null` if it is not set or is not valid JSON |
 | `setItem(key, value)` | Serialises and stores the value |
 | `removeItem(key)` | Removes the key from storage |
-| `hasItem(key)` | Returns `true` if the key exists |
+| `hasItem(key)` | Returns `true` if the key exists, even if its value is an empty string |
 | `clear()` | Removes all keys from storage |
+
+:::note Not reactive
+The methods read and write `localStorage` directly. Calling `setItem` does **not** re-render components. Keep the value in state if the UI depends on it.
+:::
 
 ## Error handling
 

@@ -14,11 +14,9 @@ import { factory } from "@julianfere/hooked/events";
 interface AppEvents {
   ping: { msg: string };
 }
-const { createEventContext, createEventProvider, createEventHook } =
-  factory<AppEvents>();
-const EventCtx = createEventContext();
-const EventsProvider = createEventProvider(EventCtx);
-const useEvents = createEventHook(EventCtx);
+const { createEventProvider, createEventHook } = factory<AppEvents>();
+const EventsProvider = createEventProvider();
+const useEvents = createEventHook();
 
 // ─── useAsync ─────────────────────────────────────────────────────────────────
 interface Todo {
@@ -29,7 +27,7 @@ interface Todo {
 
 function UseAsyncDemo() {
   const { data, status, loading, error, trigger, reset } = useAsync(
-    (id: number, signal: AbortSignal) =>
+    (signal, id: number) =>
       fetch(`https://jsonplaceholder.typicode.com/todos/${id}`, {
         signal,
       }).then((r) => r.json() as Promise<Todo>)
@@ -52,7 +50,7 @@ function UseAsyncDemo() {
 // ─── useAsync (immediate) ──────────────────────────────────────────────────────
 function UseAsyncImmediateDemo() {
   const { data, status, loading } = useAsync(
-    (signal: AbortSignal) =>
+    (signal) =>
       fetch("https://jsonplaceholder.typicode.com/todos/3", { signal }).then(
         (r) => r.json() as Promise<Todo>
       ),

@@ -8,14 +8,18 @@ title: Primeros pasos
 
 `@julianfere/hooked` es una colección de React hooks con tipado estricto, sin dependencias externas más allá de React.
 
+:::info ¿Venís de 0.x?
+1.0 requiere React 19 y tiene cambios incompatibles. Leé la [guía de migración](./migration/v1.mdx).
+:::
+
 ## Instalación
 
 ```bash
-npm install @julianfere/hooked
+pnpm add @julianfere/hooked
 ```
 
 ```bash
-yarn add @julianfere/hooked
+npm install @julianfere/hooked
 ```
 
 ## Puntos de entrada
@@ -24,7 +28,7 @@ El paquete expone dos puntos de entrada:
 
 | Import | Contenido |
 |--------|-----------|
-| `@julianfere/hooked` | `useAsync`, `useDebounce`, `useThrottle`, `useDelay`, `useDocumentTitle`, `useLocalStorage`, `useQueryParams` |
+| `@julianfere/hooked` | `useAsync`, `useDebounce`, `useThrottle`, `useDelay`, `useLocalStorage`, `useQueryParams`, `useDocumentTitle` (deprecado) |
 | `@julianfere/hooked/events` | `factory` (sistema pub/sub con EventContext) |
 
 ## Ejemplo rápido
@@ -34,7 +38,7 @@ import { useAsync } from "@julianfere/hooked";
 
 function PerfilUsuario({ id }: { id: string }) {
   const { data, status, trigger } = useAsync(
-    (signal: AbortSignal) =>
+    (signal) =>
       fetch(`/api/usuarios/${id}`, { signal }).then((r) => r.json())
   );
 
@@ -52,5 +56,5 @@ function PerfilUsuario({ id }: { id: string }) {
 
 ## Requisitos
 
-- React **18.2+**
+- React **19+** (peer dependency)
 - TypeScript **5.0+** (recomendado)

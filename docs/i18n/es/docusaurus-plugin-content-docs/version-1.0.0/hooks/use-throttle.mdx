@@ -1,0 +1,63 @@
+---
+id: use-throttle
+title: useThrottle
+sidebar_label: useThrottle
+sidebar_position: 3
+---
+
+import HookPlayground from "@site/src/components/HookPlayground";
+
+# useThrottle
+
+Devuelve una copia con throttle de un valor. El primer cambio dentro de un intervalo pasa inmediatamente (borde inicial), y el último cambio dentro de esa ventana se emite al final del intervalo (borde final).
+
+## Firma
+
+```ts
+function useThrottle<T>(value: T, interval?: number): T
+```
+
+## Parámetros
+
+| Parámetro | Tipo | Por defecto | Descripción |
+|-----------|------|-------------|-------------|
+| `value` | `T` | — | El valor a aplicar throttle |
+| `interval` | `number` | `500` | Tamaño de la ventana en milisegundos |
+
+## Valor de retorno
+
+El valor con throttle de tipo `T`.
+
+## Semántica de borde inicial + final
+
+| Evento | Comportamiento |
+|--------|----------------|
+| Primer cambio en la ventana | Pasa inmediatamente |
+| Cambios siguientes en la misma ventana | En cola, gana el último |
+| Fin de la ventana | Se emite el valor en cola |
+
+## Ejemplo interactivo
+
+<HookPlayground
+  previewHeight={280}
+  code={`import { useState } from "react";
+import { useThrottle } from "@julianfere/hooked";
+
+export default function App() {
+  const [input, setInput] = useState("");
+  const throttled = useThrottle(input, 800);
+
+  return (
+    <div style={{ padding: 24, fontFamily: "sans-serif" }}>
+      <input
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Escribí rápido…"
+        style={{ width: "100%", padding: 8, marginBottom: 12 }}
+      />
+      <p>En vivo: <strong>{input}</strong></p>
+      <p>Con throttle (800 ms): <strong>{throttled}</strong></p>
+    </div>
+  );
+}`}
+/>

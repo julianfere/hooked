@@ -1,29 +1,26 @@
 import { useCallback, useEffect, useReducer, useRef } from "react";
 import { asyncReducer, getInitialState } from "./utils";
-import { UseAsyncOptions } from "./types";
+import { AsyncFunction, TriggerArgs, UseAsyncOptions } from "./types";
 
 /**
  * useAsync manages the full lifecycle of an async function: idle → pending → fulfilled | rejected.
  *
- * @param fn - The async function to run. Receives an AbortSignal as the last argument.
+ * @param fn - The async function to run. Receives an AbortSignal as the first argument,
+ * followed by the arguments passed to `trigger`.
  * @param options - Optional configuration.
  * @returns `{ trigger, reset, status, data, error, loading }`
  *
  * @example
- * const { trigger, data, error, loading } = useAsync(fetchUser);
+ * const { trigger, data, error, loading } = useAsync((signal, id: string) =>
+ *   fetch(`/users/${id}`, { signal }).then((res) => res.json())
+ * );
  * // trigger(userId) to run manually
  *
  * @example
- * // Run on mount (fn must take no required arguments)
+ * // Run on mount (fn must take no arguments besides the signal)
  * const { data, loading } = useAsync(fetchConfig, { immediate: true });
  */
-type DropLast<T extends any[]> =
-  Required<T> extends [...infer Head, any] ? Head : [];
-
-const useAsync = <
-  F extends (...args: any[]) => Promise<any>,
-  T = Awaited<ReturnType<F>>
->(
+const useAsync = <F extends AsyncFunction, T = Awaited<ReturnType<F>>>(
   fn: F,
   options: UseAsyncOptions<T> = {}
 ) => {
@@ -36,7 +33,7 @@ const useAsync = <
   const optionsRef = useRef(options);
   useEffect(() => { optionsRef.current = options; });
 
-  const trigger = useCallback(async (...args: DropLast<Parameters<F>>) => {
+  const trigger = useCallback(async (...args: TriggerArgs<F>) => {
     // Cancel any in-flight request before starting a new one
     controllerRef.current?.abort();
     const controller = new AbortController();
@@ -45,7 +42,7 @@ const useAsync = <
     dispatch({ type: "pending" });
 
     try {
-      const result = await fnRef.current(...args, controller.signal);
+      const result = await fnRef.current(controller.signal, ...args);
 
       if (controller.signal.aborted) return;
 
@@ -66,7 +63,7 @@ const useAsync = <
 
   useEffect(() => {
     if (options.immediate) {
-      trigger(...([] as unknown as DropLast<Parameters<F>>));
+      trigger(...([] as unknown as TriggerArgs<F>));
     }
 
     return () => {

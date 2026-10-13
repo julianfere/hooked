@@ -22,11 +22,15 @@ const useLocalStorage = <Type extends Record<string, any>>() => {
   const getItem = <Key extends keyof Type>(key: Key) => {
     const returnedItem = storageRef.current.getItem(key as string);
 
-    if (!returnedItem) return null;
+    if (returnedItem === null) return null;
 
-    const parsedItem: Type[typeof key] = JSON.parse(returnedItem);
-
-    return parsedItem;
+    try {
+      const parsedItem: Type[typeof key] = JSON.parse(returnedItem);
+      return parsedItem;
+    } catch {
+      // Value was not written by setItem (or is corrupted)
+      return null;
+    }
   };
 
   const setItem = (key: keyof Type, value: Type[typeof key]) => {
@@ -38,7 +42,7 @@ const useLocalStorage = <Type extends Record<string, any>>() => {
   };
 
   const hasItem = (key: keyof Type) => {
-    return !!storageRef.current.getItem(key as string);
+    return storageRef.current.getItem(key as string) !== null;
   };
 
   const clear = () => {

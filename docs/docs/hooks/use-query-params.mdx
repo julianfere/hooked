@@ -43,11 +43,13 @@ set({ page: 2 });
 | Method / Property | Description |
 |-------------------|-------------|
 | `get(...keys)` | Returns an object with the requested params, auto-casting to `boolean`, `number`, or parsed JSON |
-| `set(params, url?)` | Pushes updated params to the URL. Optionally target a different path |
-| `build(params)` | Returns a query string from `params` without navigating |
+| `set(params, url?)` | Replaces the whole query string with `params` (`history.replaceState`). Keeps the hash. Optionally target a different path. `set({})` removes the query string |
+| `build(params)` | Returns a query string from `params` without navigating. Skips `null`/`undefined`, serializes objects and arrays as JSON |
 | `pathname` | Current `location.pathname` |
 | `search` | Current `location.search` |
-| `clear()` | Removes all query params from the URL |
+| `clear()` | Removes all query params from the URL, keeping the hash |
+
+`pathname` and `search` are reactive. Every component using the hook re-renders after `set`, `clear`, or browser back/forward navigation.
 
 ## Value auto-casting
 
@@ -56,8 +58,10 @@ set({ page: 2 });
 | String value | Casted as |
 |--------------|-----------|
 | `"true"` / `"false"` | `boolean` |
-| `"42"` | `number` |
-| `'{"a":1}'` | Parsed object/array |
+| `"null"` | `null` |
+| `"42"`, `"-1.5"` | `number` |
+| `'{"a":1}'`, `"[1,2]"` | Parsed object/array |
+| `"007"`, `"0x10"`, `"1e5"`, unsafe integers | `string` (kept as-is) |
 | Anything else | `string` |
 
 ## Example
@@ -78,7 +82,8 @@ function SearchPage() {
   return (
     <div>
       <input value={q} onChange={(e) => set({ q: e.target.value, page: 1 })} />
-      <button onClick={() => set({ page: page + 1 })}>Next page</button>
+      {/* set() replaces the query string, so keep the params you need */}
+      <button onClick={() => set({ q, page: page + 1 })}>Next page</button>
       <button onClick={clear}>Clear filters</button>
     </div>
   );
@@ -86,5 +91,5 @@ function SearchPage() {
 ```
 
 :::note
-This hook relies on `window.location` and `history.pushState`. It is not compatible with server-side rendering out of the box.
+During server rendering `pathname` and `search` are empty strings. `get`, `set` and `clear` use `window`, so call them only on the client (in event handlers or effects).
 :::

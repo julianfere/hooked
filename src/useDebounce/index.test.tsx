@@ -96,4 +96,19 @@ describe("useDebounce", () => {
 
     expect(result.current).toBe("new new value");
   });
+
+  it("should accept a delay of 0", async () => {
+    const { result, rerender } = renderHook(
+      ({ value }) => useDebounce(value, 0),
+      { initialProps: { value: "a" } }
+    );
+
+    rerender({ value: "b" });
+
+    act(() => {
+      vi.advanceTimersByTime(0);
+    });
+
+    expect(result.current).toBe("b");
+  });
 });

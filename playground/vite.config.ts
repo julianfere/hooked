@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      // Force single React instance — avoids hook errors with local file: dependency
+      // Force single React instance — the library is linked from the repo root
       react: path.resolve('./node_modules/react'),
       'react-dom': path.resolve('./node_modules/react-dom'),
     },

@@ -43,11 +43,13 @@ set({ pagina: 2 });
 | Método / Propiedad | Descripción |
 |--------------------|-------------|
 | `get(...keys)` | Devuelve un objeto con los params solicitados, haciendo auto-cast a `boolean`, `number` o JSON parseado |
-| `set(params, url?)` | Empuja los params actualizados a la URL. Opcionalmente apunta a otro path |
-| `build(params)` | Devuelve un query string a partir de `params` sin navegar |
+| `set(params, url?)` | Reemplaza todo el query string por `params` (`history.replaceState`). Conserva el hash. Opcionalmente apunta a otro path. `set({})` elimina el query string |
+| `build(params)` | Devuelve un query string a partir de `params` sin navegar. Ignora `null`/`undefined` y serializa objetos y arrays como JSON |
 | `pathname` | `location.pathname` actual |
 | `search` | `location.search` actual |
-| `clear()` | Elimina todos los query params de la URL |
+| `clear()` | Elimina todos los query params de la URL, conservando el hash |
+
+`pathname` y `search` son reactivos. Todos los componentes que usan el hook se vuelven a renderizar después de `set`, `clear` o la navegación atrás/adelante del navegador.
 
 ## Auto-conversión de valores
 
@@ -56,8 +58,10 @@ set({ pagina: 2 });
 | Valor en string | Convertido a |
 |-----------------|--------------|
 | `"true"` / `"false"` | `boolean` |
-| `"42"` | `number` |
-| `'{"a":1}'` | Objeto/array parseado |
+| `"null"` | `null` |
+| `"42"`, `"-1.5"` | `number` |
+| `'{"a":1}'`, `"[1,2]"` | Objeto/array parseado |
+| `"007"`, `"0x10"`, `"1e5"`, enteros no seguros | `string` (sin cambios) |
 | Cualquier otra cosa | `string` |
 
 ## Ejemplo
@@ -78,7 +82,8 @@ function PaginaBusqueda() {
   return (
     <div>
       <input value={q} onChange={(e) => set({ q: e.target.value, pagina: 1 })} />
-      <button onClick={() => set({ pagina: pagina + 1 })}>Siguiente página</button>
+      {/* set() reemplaza el query string, así que conservá los params que necesites */}
+      <button onClick={() => set({ q, pagina: pagina + 1 })}>Siguiente página</button>
       <button onClick={clear}>Limpiar filtros</button>
     </div>
   );
@@ -86,5 +91,5 @@ function PaginaBusqueda() {
 ```
 
 :::note
-Este hook depende de `window.location` y `history.pushState`. No es compatible con renderizado del lado del servidor out of the box.
+Durante el renderizado en el servidor, `pathname` y `search` son strings vacíos. `get`, `set` y `clear` usan `window`, así que llamalos solo en el cliente (en event handlers o efectos).
 :::

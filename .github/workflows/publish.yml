@@ -11,16 +11,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20.0.0"
-      - run: npm install --frozen-lockfile
+          node-version-file: ".node-version"
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
       - name: Create Release Pull Request or Publish
         id: changesets
         uses: changesets/action@v1
         with:
-          publish: npm run release
+          publish: pnpm run release
           token: ${{ secrets.GH_TOKEN }}
           npmToken: ${{ secrets.NPM_TOKEN }}
         env:
