@@ -7,7 +7,7 @@ sidebar_position: 2
 
 # Migrating to 1.0
 
-:::danger Breaking changes
+:::danger[Breaking changes]
 1.0 is a **major release** with breaking changes. It requires React 19 and changes the signature of `useAsync`. Read this page before upgrading from 0.x.
 :::
 
@@ -69,7 +69,7 @@ useAsync(() => loadSettings());
 
 With the signal first, `trigger` takes exactly the parameters declared after it.
 
-:::tip Finding usages
+:::tip[Finding usages]
 Search your codebase for `useAsync(` and check the parameter list of each function. TypeScript reports every call where the first parameter isn't compatible with `AbortSignal`.
 :::
 

@@ -7,7 +7,7 @@ sidebar_position: 2
 
 # Migrar a 1.0
 
-:::danger Cambios incompatibles
+:::danger[Cambios incompatibles]
 1.0 es una **versión major** con cambios incompatibles. Requiere React 19 y cambia la firma de `useAsync`. Leé esta página antes de actualizar desde 0.x.
 :::
 
@@ -69,7 +69,7 @@ useAsync(() => cargarPreferencias());
 
 Con el signal primero, `trigger` recibe exactamente los parámetros declarados después de él.
 
-:::tip Encontrar los usos
+:::tip[Encontrar los usos]
 Buscá `useAsync(` en tu código y revisá la lista de parámetros de cada función. TypeScript marca cada llamada cuyo primer parámetro no sea compatible con `AbortSignal`.
 :::
 

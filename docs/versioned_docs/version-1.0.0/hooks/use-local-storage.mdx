@@ -49,7 +49,7 @@ storage.setItem("theme", "blue");           // ❌ Type error
 | `hasItem(key)` | Returns `true` if the key exists, even if its value is an empty string |
 | `clear()` | Removes all keys from storage |
 
-:::note Not reactive
+:::note[Not reactive]
 The methods read and write `localStorage` directly. Calling `setItem` does **not** re-render components. Keep the value in state if the UI depends on it.
 :::
 

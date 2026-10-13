@@ -49,7 +49,7 @@ storage.setItem("tema", "azul");          // ❌ Error de tipos
 | `hasItem(key)` | Devuelve `true` si la clave existe, aunque su valor sea un string vacío |
 | `clear()` | Elimina todas las claves del storage |
 
-:::note No es reactivo
+:::note[No es reactivo]
 Los métodos leen y escriben `localStorage` directamente. Llamar a `setItem` **no** vuelve a renderizar los componentes. Guardá el valor en el estado si la UI depende de él.
 :::
 
