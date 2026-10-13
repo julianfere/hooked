@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@julianfere/hooked':
-        specifier: file:..
-        version: file:..(react@19.3.0)
+        specifier: link:..
+        version: link:..
       react:
         specifier: ^19.3.0
         version: 19.3.0
@@ -278,11 +278,6 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
-
-  '@julianfere/hooked@file:..':
-    resolution: {directory: .., type: directory}
-    peerDependencies:
-      react: ^19.2.0
 
   '@napi-rs/lzma-linux-x64-gnu@1.5.1':
     resolution: {integrity: sha512-oTXEIha4SsuXdTA4Iyskj0kpdx2yVXdhd75c2v3xGrHFfVMsbhTPZU/nMPL4sWKo4pBHm3aucLaqGlF696dTyQ==}
@@ -841,10 +836,6 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
-
-  '@julianfere/hooked@file:..(react@19.3.0)':
-    dependencies:
-      react: 19.3.0
 
   '@napi-rs/lzma-linux-x64-gnu@1.5.1':
     optional: true

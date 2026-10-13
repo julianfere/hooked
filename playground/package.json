@@ -10,7 +10,7 @@
     "e2e": "playwright test --reporter=list"
   },
   "dependencies": {
-    "@julianfere/hooked": "file:..",
+    "@julianfere/hooked": "link:..",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
