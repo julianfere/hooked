@@ -11,7 +11,7 @@ import HookPlayground from "@site/src/components/HookPlayground";
 
 Manages the full lifecycle of an async function — idle, pending, fulfilled, and rejected — with built-in abort handling and optional auto-execution.
 
-:::danger Breaking change in 1.0
+:::danger[Breaking change in 1.0]
 The `AbortSignal` is now the **first** argument of `fn`, followed by the arguments passed to `trigger`. In 0.x it was appended as the last argument. See the [migration guide](../migration/v1.mdx#useasync-signal-first).
 :::
 
