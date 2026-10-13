@@ -78,7 +78,13 @@ describe("createEventHook", () => {
 
   describe("useEvents", () => {
     it("should throw an error if used outside of EventProvider", () => {
-      expect(() => useEvents()).toThrowError();
+      vi.spyOn(console, "error").mockImplementation(() => {});
+
+      expect(() => renderHook(() => useEvents())).toThrowError(
+        "The event hook must be used within its EventProvider"
+      );
+
+      vi.mocked(console.error).mockRestore();
     });
 
     it("should return the context value", () => {

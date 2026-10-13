@@ -101,4 +101,39 @@ describe("useDelay", () => {
 
     expect(callback).toHaveBeenCalled();
   });
+
+  it("should not run manual callbacks after unmount", async () => {
+    const callback = vi.fn();
+    const { result, unmount } = renderHook(() =>
+      useDelay(callback, { manual: true })
+    );
+
+    act(() => {
+      result.current();
+    });
+
+    unmount();
+
+    act(() => {
+      vi.advanceTimersByTime(250);
+    });
+
+    expect(callback).not.toHaveBeenCalled();
+  });
+
+  it("should allow cancelling a manual run", async () => {
+    const callback = vi.fn();
+    const { result } = renderHook(() => useDelay(callback, { manual: true }));
+
+    act(() => {
+      const cancel = result.current();
+      cancel();
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(250);
+    });
+
+    expect(callback).not.toHaveBeenCalled();
+  });
 });

@@ -14,13 +14,14 @@ import {
 } from "./types";
 
 const createFactories = <GenericEvents extends Record<string, any>>() => {
-  const context = createContext<IEventContext<GenericEvents> | null>(null);
+  const EventContext = createContext<IEventContext<GenericEvents> | null>(null);
+  let nextId = 0;
 
   const createEventProvider = () => {
     return ({ children }: PropsWithChildren) => {
       const subscriberRef = useRef<ISubscriptions<GenericEvents>[]>([]);
 
-      const unsubscribe = useCallback((id: string) => {
+      const unsubscribe = useCallback((id: number) => {
         subscriberRef.current = subscriberRef.current.filter(
           (sub) => sub.id !== id
         );
@@ -28,7 +29,7 @@ const createFactories = <GenericEvents extends Record<string, any>>() => {
 
       const subscribe: SubscriptionHandler<GenericEvents> = useCallback(
         (eventName, callback) => {
-          const id = crypto.randomUUID();
+          const id = nextId++;
           subscriberRef.current.push({ id, eventName, callback });
           return () => unsubscribe(id);
         },
@@ -48,15 +49,15 @@ const createFactories = <GenericEvents extends Record<string, any>>() => {
 
       const value = useMemo(() => ({ subscribe, publish }), [subscribe, publish]);
 
-      return <context.Provider value={value}>{children}</context.Provider>;
+      return <EventContext value={value}>{children}</EventContext>;
     };
   };
 
   const createEventHook = () => {
     return () => {
-      const ctx = useContext(context);
+      const ctx = useContext(EventContext);
       if (ctx === null) {
-        throw new Error("useEvents must be used within a EventProvider");
+        throw new Error("The event hook must be used within its EventProvider");
       }
       return ctx;
     };

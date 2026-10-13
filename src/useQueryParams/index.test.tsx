@@ -1,7 +1,8 @@
-import { describe, expect, it, expectTypeOf, afterEach, vi } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, expectTypeOf } from "vitest";
+import { act, renderHook } from "@testing-library/react";
 
 import useQueryParams from ".";
+import { castValue } from "./utils";
 
 interface TestQueryParams {
   foo: string;
@@ -20,65 +21,47 @@ interface TestQueryParamsWithArray {
   foo: number[];
 }
 
-const originalLocation = window;
+const navigate = (url: string) => window.history.replaceState(null, "", url);
+
+const currentUrl = () =>
+  `${window.location.pathname}${window.location.search}${window.location.hash}`;
 
 describe("useQueryParams", () => {
-  afterEach(() => {
-    Object.defineProperty(globalThis, "window", {
-      value: originalLocation,
-    });
+  beforeEach(() => {
+    navigate("/");
   });
 
   describe("get", () => {
     it("should return the correct query params", () => {
-      Object.defineProperty(window, "location", {
-        value: { search: "?foo=hello&baz=test" },
-      });
+      navigate("/?foo=hello&baz=test");
 
       const { result } = renderHook(() => useQueryParams<TestQueryParams>());
 
-      const params = result.current.get("foo", "baz");
-
-      expect(params).toEqual({
+      expect(result.current.get("foo", "baz")).toEqual({
         foo: "hello",
         baz: "test",
       });
     });
 
     it("should return query params with correspondig type", () => {
-      Object.defineProperty(window, "location", {
-        value: { search: "?foo=hello&bar=1&baz=test" },
-      });
+      navigate("/?foo=hello&bar=1&baz=test");
 
       const { result } = renderHook(() => useQueryParams<TestQueryParams>());
 
       const params = result.current.get("foo", "bar", "baz");
 
-      expect(params).toEqual({
-        foo: "hello",
-        bar: 1,
-        baz: "test",
-      });
-
+      expect(params).toEqual({ foo: "hello", bar: 1, baz: "test" });
       expectTypeOf(params).toEqualTypeOf<Partial<TestQueryParams>>();
     });
 
     it("should return empty object if no query params are found", () => {
-      Object.defineProperty(window, "location", {
-        value: { search: "" },
-      });
-
       const { result } = renderHook(() => useQueryParams<TestQueryParams>());
 
-      const params = result.current.get("foo", "bar", "baz");
-
-      expect(params).toEqual({});
+      expect(result.current.get("foo", "bar", "baz")).toEqual({});
     });
 
     it("should return the correct query params when the value is an object", () => {
-      Object.defineProperty(window, "location", {
-        value: { search: '?foo={"bar":"test","baz":1}' },
-      });
+      navigate(`/?foo=${encodeURIComponent('{"bar":"test","baz":1}')}`);
 
       const { result } = renderHook(() =>
         useQueryParams<TestQueryParamsWithObject>()
@@ -86,20 +69,12 @@ describe("useQueryParams", () => {
 
       const params = result.current.get("foo");
 
-      expect(params).toEqual({
-        foo: {
-          bar: "test",
-          baz: 1,
-        },
-      });
-
+      expect(params).toEqual({ foo: { bar: "test", baz: 1 } });
       expectTypeOf(params).toEqualTypeOf<Partial<TestQueryParamsWithObject>>();
     });
 
     it("should return the correct query params when the value is an array", () => {
-      Object.defineProperty(window, "location", {
-        value: { search: "?foo=[1,2,3]" },
-      });
+      navigate("/?foo=[1,2,3]");
 
       const { result } = renderHook(() =>
         useQueryParams<TestQueryParamsWithArray>()
@@ -107,10 +82,7 @@ describe("useQueryParams", () => {
 
       const params = result.current.get("foo");
 
-      expect(params).toEqual({
-        foo: [1, 2, 3],
-      });
-
+      expect(params).toEqual({ foo: [1, 2, 3] });
       expectTypeOf(params).toEqualTypeOf<Partial<TestQueryParamsWithArray>>();
     });
 
@@ -121,9 +93,7 @@ describe("useQueryParams", () => {
         empty: null;
       }
 
-      Object.defineProperty(window, "location", {
-        value: { search: "?zero=0&flag=false&empty=null" },
-      });
+      navigate("/?zero=0&flag=false&empty=null");
 
       const { result } = renderHook(() => useQueryParams<FalsyParams>());
 
@@ -137,148 +107,93 @@ describe("useQueryParams", () => {
 
   describe("set", () => {
     it("should set the correct query params", () => {
-      const mockreplaceState = vi.fn();
-
-      Object.defineProperties(window, {
-        location: {
-          value: { href: "http://test.com" },
-        },
-        history: {
-          value: {
-            replaceState: mockreplaceState,
-          },
-        },
-      });
+      navigate("/page");
 
       const { result } = renderHook(() => useQueryParams<TestQueryParams>());
 
-      result.current.set({
-        foo: "hello",
-        bar: 1,
-        baz: "test",
+      act(() => {
+        result.current.set({ foo: "hello", bar: 1, baz: "test" });
       });
 
-      expect(mockreplaceState).toHaveBeenCalledWith(
-        null,
-        "",
-        "http://test.com?foo=hello&bar=1&baz=test"
-      );
+      expect(currentUrl()).toBe("/page?foo=hello&bar=1&baz=test");
     });
 
     it("should set the correct query params when the url is provided", () => {
-      const mockreplaceState = vi.fn();
-
-      Object.defineProperties(window, {
-        location: {
-          value: { href: "http://test.com" },
-        },
-        history: {
-          value: {
-            replaceState: mockreplaceState,
-          },
-        },
-      });
+      navigate("/page");
 
       const { result } = renderHook(() => useQueryParams<TestQueryParams>());
 
-      result.current.set(
-        {
-          foo: "hello",
-          bar: 1,
-          baz: "test",
-        },
-        "http://anothertest.com"
-      );
+      act(() => {
+        result.current.set({ foo: "hello", bar: 1, baz: "test" }, "/other");
+      });
 
-      expect(mockreplaceState).toHaveBeenCalledWith(
-        null,
-        "",
-        "http://anothertest.com?foo=hello&bar=1&baz=test"
-      );
+      expect(currentUrl()).toBe("/other?foo=hello&bar=1&baz=test");
     });
 
-    it("should set the correct query params when the url has existing query params", () => {
-      const mockreplaceState = vi.fn();
-
-      Object.defineProperties(window, {
-        location: {
-          value: { href: "http://test.com?foo=hello" },
-        },
-        history: {
-          value: {
-            replaceState: mockreplaceState,
-          },
-        },
-      });
+    it("should replace existing query params", () => {
+      navigate("/page?foo=hello");
 
       const { result } = renderHook(() => useQueryParams<TestQueryParams>());
 
-      result.current.set({
-        foo: "hello",
-        bar: 1,
-        baz: "test",
+      act(() => {
+        result.current.set({ foo: "bye", bar: 1 });
       });
 
-      expect(mockreplaceState).toHaveBeenCalledWith(
-        null,
-        "",
-        "http://test.com?foo=hello&bar=1&baz=test"
-      );
+      expect(currentUrl()).toBe("/page?foo=bye&bar=1");
     });
 
-    it("should set the correct query params when the url has existing query params and the url is provided", () => {
-      const mockreplaceState = vi.fn();
-
-      Object.defineProperties(window, {
-        location: {
-          value: { href: "http://test.com?foo=hello" },
-        },
-        history: {
-          value: {
-            replaceState: mockreplaceState,
-          },
-        },
-      });
+    it("should keep the hash", () => {
+      navigate("/page?foo=hello#section");
 
       const { result } = renderHook(() => useQueryParams<TestQueryParams>());
 
-      result.current.set(
-        {
-          foo: "hello",
-          bar: 1,
-          baz: "test",
-        },
-        "http://anothertest.com"
-      );
+      act(() => {
+        result.current.set({ bar: 2 });
+      });
 
-      expect(mockreplaceState).toHaveBeenCalledWith(
-        null,
-        "",
-        "http://anothertest.com?foo=hello&bar=1&baz=test"
-      );
+      expect(currentUrl()).toBe("/page?bar=2#section");
+    });
+
+    it("should remove the query string when called with no params", () => {
+      navigate("/page?foo=hello");
+
+      const { result } = renderHook(() => useQueryParams<TestQueryParams>());
+
+      act(() => {
+        result.current.set({});
+      });
+
+      expect(currentUrl()).toBe("/page");
+    });
+
+    it("should re-render with the new search", () => {
+      navigate("/page");
+
+      const { result } = renderHook(() => useQueryParams<TestQueryParams>());
+
+      act(() => {
+        result.current.set({ foo: "hello" });
+      });
+
+      expect(result.current.search).toBe("?foo=hello");
+      expect(result.current.get("foo")).toEqual({ foo: "hello" });
+    });
+
+    it("should notify every mounted instance", () => {
+      navigate("/page");
+
+      const first = renderHook(() => useQueryParams<TestQueryParams>());
+      const second = renderHook(() => useQueryParams<TestQueryParams>());
+
+      act(() => {
+        first.result.current.set({ bar: 3 });
+      });
+
+      expect(second.result.current.search).toBe("?bar=3");
     });
 
     it("should be typed correctly", () => {
-      const mockreplaceState = vi.fn();
-
-      Object.defineProperties(window, {
-        location: {
-          value: { href: "http://test.com?foo=hello" },
-        },
-        history: {
-          value: {
-            replaceState: mockreplaceState,
-          },
-        },
-      });
-
       const { result } = renderHook(() => useQueryParams<TestQueryParams>());
-
-      result.current.set({
-        foo: "hello",
-        bar: 1,
-        baz: "test",
-      });
 
       expectTypeOf(result.current.set)
         .parameter(0)
@@ -290,55 +205,91 @@ describe("useQueryParams", () => {
     it("should build the correct query params", () => {
       const { result } = renderHook(() => useQueryParams<TestQueryParams>());
 
-      const params = result.current.build({
-        foo: "hello",
-        bar: 1,
-        baz: "test",
-      });
+      const params = result.current.build({ foo: "hello", bar: 1, baz: "test" });
 
       expect(params).toEqual("foo=hello&bar=1&baz=test");
+      expectTypeOf(params).toEqualTypeOf<string>();
     });
 
-    it("should be typed correctly", () => {
-      const { result } = renderHook(() => useQueryParams<TestQueryParams>());
+    it("should skip null and undefined values", () => {
+      const { result } = renderHook(() =>
+        useQueryParams<{ foo?: string | null; bar?: number }>()
+      );
 
-      const params = result.current.build({
-        foo: "hello",
-        bar: 1,
-        baz: "test",
-      });
+      expect(result.current.build({ foo: null, bar: undefined })).toBe("");
+      expect(result.current.build({ foo: null, bar: 2 })).toBe("bar=2");
+    });
 
-      expectTypeOf(params).toEqualTypeOf<string>();
+    it("should serialize objects and arrays as JSON", () => {
+      const { result } = renderHook(() =>
+        useQueryParams<TestQueryParamsWithArray>()
+      );
+
+      const query = result.current.build({ foo: [1, 2, 3] });
+
+      expect(new URLSearchParams(query).get("foo")).toBe("[1,2,3]");
     });
   });
 
   describe("clear", () => {
     it("should clear the query params", () => {
-      const mockreplaceState = vi.fn();
-
-      Object.defineProperties(window, {
-        location: {
-          value: {
-            href: "http://test.com?foo=hello",
-            pathname: "http://test.com",
-          },
-        },
-        history: {
-          value: {
-            replaceState: mockreplaceState,
-          },
-        },
-      });
+      navigate("/page?foo=hello");
 
       const { result } = renderHook(() => useQueryParams<TestQueryParams>());
 
-      result.current.clear();
+      act(() => {
+        result.current.clear();
+      });
 
-      expect(mockreplaceState).toHaveBeenCalledWith(
-        null,
-        "",
-        "http://test.com"
-      );
+      expect(currentUrl()).toBe("/page");
+      expect(result.current.search).toBe("");
     });
+
+    it("should keep the hash", () => {
+      navigate("/page?foo=hello#section");
+
+      const { result } = renderHook(() => useQueryParams<TestQueryParams>());
+
+      act(() => {
+        result.current.clear();
+      });
+
+      expect(currentUrl()).toBe("/page#section");
+    });
+  });
+
+  describe("popstate", () => {
+    it("should update when the browser navigates", () => {
+      const { result } = renderHook(() => useQueryParams<TestQueryParams>());
+
+      act(() => {
+        navigate("/back?foo=hello");
+        window.dispatchEvent(new PopStateEvent("popstate"));
+      });
+
+      expect(result.current.pathname).toBe("/back");
+      expect(result.current.search).toBe("?foo=hello");
+    });
+  });
+});
+
+describe("castValue", () => {
+  it("should keep whitespace-only strings as strings", () => {
+    expect(castValue(" ")).toBe(" ");
+  });
+
+  it("should keep hex, exponent and leading-zero values as strings", () => {
+    expect(castValue("0x10")).toBe("0x10");
+    expect(castValue("1e5")).toBe("1e5");
+    expect(castValue("007")).toBe("007");
+  });
+
+  it("should keep unsafe integers as strings", () => {
+    expect(castValue("12345678901234567890")).toBe("12345678901234567890");
+  });
+
+  it("should parse regular numbers", () => {
+    expect(castValue("42")).toBe(42);
+    expect(castValue("-1.5")).toBe(-1.5);
   });
 });

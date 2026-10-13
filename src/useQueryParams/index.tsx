@@ -1,48 +1,45 @@
-import { useEffect, useState } from "react";
-import { castValue } from "./utils";
+import { useSyncExternalStore } from "react";
+import { castValue, serializeValue } from "./utils";
 
-function getCurrentLocation() {
-  return {
-    pathname: window.location.pathname,
-    search: window.location.search,
+const LOCATION_CHANGE = "hooked:locationchange";
+
+const subscribe = (onChange: () => void) => {
+  window.addEventListener("popstate", onChange);
+  window.addEventListener(LOCATION_CHANGE, onChange);
+
+  return () => {
+    window.removeEventListener("popstate", onChange);
+    window.removeEventListener(LOCATION_CHANGE, onChange);
   };
-}
+};
 
-const listeners: (() => void)[] = [];
+const getPathname = () => window.location.pathname;
+const getSearch = () => window.location.search;
+const getServerSnapshot = () => "";
+
+const splitHash = (url: string): [string, string] => {
+  const index = url.indexOf("#");
+  return index === -1 ? [url, ""] : [url.slice(0, index), url.slice(index)];
+};
+
+const replace = (url: string) => {
+  window.history.replaceState(null, "", url);
+  window.dispatchEvent(new Event(LOCATION_CHANGE));
+};
 
 const useQueryParams = <TQuery extends Record<string, any>>() => {
-  const [{ pathname, search }, setLocation] = useState(getCurrentLocation());
-
-  const notify = () => listeners.forEach((listener) => listener());
-  const handleChange = () => setLocation(getCurrentLocation());
-
-  useEffect(() => {
-    listeners.push(handleChange);
-    window.addEventListener("popstate", handleChange);
-
-    return () => {
-      listeners.splice(listeners.indexOf(handleChange), 1);
-      window.removeEventListener("popstate", handleChange);
-    };
-  }, []);
-
-  const replace = (url: string) => {
-    window.history.replaceState(null, "", url);
-    notify();
-  };
+  const pathname = useSyncExternalStore(subscribe, getPathname, getServerSnapshot);
+  const search = useSyncExternalStore(subscribe, getSearch, getServerSnapshot);
 
   const get = (...keys: (keyof TQuery)[]) => {
-    const location = window.location;
-
     const params: Partial<TQuery> = {};
-
-    const searchParams = new URLSearchParams(location.search);
+    const searchParams = new URLSearchParams(window.location.search);
 
     keys.forEach((key) => {
       const value = searchParams.get(key.toString());
 
       if (value) {
-        params[key as keyof TQuery] = castValue<TQuery[keyof TQuery]>(value);
+        params[key] = castValue<TQuery[keyof TQuery]>(value);
       }
     });
 
@@ -53,25 +50,23 @@ const useQueryParams = <TQuery extends Record<string, any>>() => {
     const searchParams = new URLSearchParams();
 
     Object.entries(params).forEach(([key, value]) => {
-      searchParams.set(key, value.toString());
+      if (value === undefined || value === null) return;
+      searchParams.set(key, serializeValue(value));
     });
 
     return searchParams.toString();
   };
 
   const set = (params: Partial<TQuery>, url?: string) => {
-    const searchParams = build(params);
-    const redirectUrl = url || window.location.href;
+    const query = build(params);
+    const [target, hash] = splitHash(url ?? window.location.href);
+    const base = target.split("?")[0];
 
-    if (searchParams === "") return;
-
-    const newURL = `${redirectUrl.split("?")[0]}?${searchParams.toString()}`;
-
-    replace(newURL);
+    replace(query ? `${base}?${query}${hash}` : `${base}${hash}`);
   };
 
   const clear = () => {
-    replace(pathname);
+    replace(`${window.location.pathname}${window.location.hash}`);
   };
 
   return { get, set, build, pathname, search, clear };

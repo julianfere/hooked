@@ -14,7 +14,7 @@ export interface IEventContext<GenericEvent extends Record<string, any>> {
 }
 
 export interface ISubscriptions<GenericEvents extends Record<string, any>> {
-  id: string;
+  id: number;
   eventName: keyof GenericEvents;
   callback: (payload: any) => void;
 }
