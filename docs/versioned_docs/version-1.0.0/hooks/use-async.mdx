@@ -1,0 +1,127 @@
+---
+id: use-async
+title: useAsync
+sidebar_label: useAsync
+sidebar_position: 1
+---
+
+import HookPlayground from "@site/src/components/HookPlayground";
+
+# useAsync
+
+Manages the full lifecycle of an async function — idle, pending, fulfilled, and rejected — with built-in abort handling and optional auto-execution.
+
+:::danger Breaking change in 1.0
+The `AbortSignal` is now the **first** argument of `fn`, followed by the arguments passed to `trigger`. In 0.x it was appended as the last argument. See the [migration guide](../migration/v1.mdx#useasync-signal-first).
+:::
+
+## Signature
+
+```ts
+type AsyncFunction = (signal: AbortSignal, ...args: any[]) => Promise<any>;
+
+function useAsync<F extends AsyncFunction>(
+  fn: F,
+  options?: UseAsyncOptions<Awaited<ReturnType<F>>>
+): {
+  trigger: (...args: TriggerArgs<F>) => Promise<void>;
+  reset: () => void;
+  status: "idle" | "pending" | "fulfilled" | "rejected";
+  data: Awaited<ReturnType<F>> | undefined;
+  error: unknown;
+  loading: boolean;
+};
+```
+
+`TriggerArgs<F>` is every parameter of `fn` after the signal. Optional parameters stay optional.
+
+## Options
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `immediate` | `boolean` | `false` | Run `fn` automatically on mount. Only for functions that take no arguments besides the signal |
+| `onSuccess` | `(data: T) => void` | — | Called when the promise resolves |
+| `onError` | `(error: unknown) => void` | — | Called when the promise rejects |
+
+## Return value
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `status` | `"idle" \| "pending" \| "fulfilled" \| "rejected"` | Current lifecycle state |
+| `data` | `T \| undefined` | Resolved value, or `undefined` |
+| `error` | `unknown \| undefined` | Rejection reason, or `undefined` |
+| `loading` | `boolean` | `true` while `status === "pending"` |
+| `trigger` | `(...args) => Promise<void>` | Run the async function with the given arguments |
+| `reset` | `() => void` | Abort any in-flight request and reset state back to `idle` |
+
+## Key behaviours
+
+- `fn` receives an `AbortSignal` as its **first argument**. Pass it to `fetch` (or any abortable API) for automatic cancellation. Functions that don't need it can omit the parameter.
+- The arguments of `trigger` are forwarded after the signal: `trigger(id, page)` calls `fn(signal, id, page)`.
+- Re-triggering while a request is in-flight cancels the previous request automatically; only the latest result is stored.
+- The in-flight request is aborted on unmount.
+- `fn`, `onSuccess` and `onError` can be inline functions: the latest version is always used.
+
+## Passing arguments
+
+```tsx
+import { useAsync } from "@julianfere/hooked";
+
+function UserCard() {
+  const { data, loading, trigger } = useAsync(
+    (signal, id: string, includePosts?: boolean) =>
+      fetch(`/api/users/${id}?posts=${includePosts ?? false}`, { signal }).then(
+        (res) => res.json() as Promise<User>
+      )
+  );
+
+  return (
+    <>
+      <button onClick={() => trigger("42")}>Load user</button>
+      <button onClick={() => trigger("42", true)}>Load user with posts</button>
+      {loading ? <p>Loading…</p> : <p>{data?.name}</p>}
+    </>
+  );
+}
+```
+
+## When to use React 19 APIs instead
+
+React 19 ships primitives that cover some cases `useAsync` used to handle. Prefer them when they fit:
+
+| Use case | Recommended |
+|----------|-------------|
+| Read data during render with Suspense and error boundaries | [`use(promise)`](https://react.dev/reference/react/use) |
+| Form submissions and mutations with pending state | [`useActionState`](https://react.dev/reference/react/useActionState) / [`useTransition`](https://react.dev/reference/react/useTransition) |
+| Imperative requests triggered by events, with cancellation and callbacks, without Suspense | `useAsync` |
+
+## Live example
+
+<HookPlayground
+  previewHeight={360}
+  showConsole
+  code={`import { useAsync } from "@julianfere/hooked";
+
+export default function App() {
+  const { data, status, loading, error, trigger, reset } = useAsync(
+    (signal, id: number) =>
+      fetch(\`https://jsonplaceholder.typicode.com/todos/\${id}\`, { signal }).then(
+        (r) => r.json()
+      )
+  );
+
+  return (
+    <div style={{ padding: 24, fontFamily: "sans-serif" }}>
+      <p>Status: <strong>{status}</strong></p>
+      {loading && <p>Loading…</p>}
+      {error && <p style={{ color: "red" }}>Error!</p>}
+      {data && <pre>{JSON.stringify(data, null, 2)}</pre>}
+      <button onClick={() => trigger(1)} disabled={loading}>Fetch #1</button>
+      {" "}
+      <button onClick={() => trigger(2)} disabled={loading}>Fetch #2</button>
+      {" "}
+      <button onClick={reset}>Reset</button>
+    </div>
+  );
+}`}
+/>

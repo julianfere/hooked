@@ -26,7 +26,11 @@ function useDebounce<T>(value: T, delay?: number): T
 
 ## Return value
 
-The debounced value of type `T`. It will always equal the initial `value` on the first render.
+The debounced value of type `T`. It will always equal the initial `value` on the first render. A `delay` of `0` defers the update to the next tick.
+
+:::tip useDebounce vs useDeferredValue
+React's [`useDeferredValue`](https://react.dev/reference/react/useDeferredValue) defers re-rendering expensive UI without a fixed delay. Use `useDebounce` when you need a time-based delay, for example to avoid firing a request on every keystroke.
+:::
 
 ## Live example
 

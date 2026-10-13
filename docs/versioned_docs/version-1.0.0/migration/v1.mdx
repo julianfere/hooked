@@ -1,0 +1,130 @@
+---
+id: v1
+title: Migrating to 1.0
+sidebar_label: Migrating to 1.0
+sidebar_position: 2
+---
+
+# Migrating to 1.0
+
+:::danger Breaking changes
+1.0 is a **major release** with breaking changes. It requires React 19 and changes the signature of `useAsync`. Read this page before upgrading from 0.x.
+:::
+
+## Summary
+
+| Change | Type | Action required |
+|--------|------|-----------------|
+| React 19 required, `react` is now a peer dependency | **Breaking** | Upgrade React to 19 |
+| `useAsync` receives the `AbortSignal` as the first argument | **Breaking** | Move the `signal` parameter to the front |
+| `useDocumentTitle` deprecated | Deprecation | Render `<title>` instead (optional until 2.0) |
+| Bug fixes in `useDebounce`, `useDelay`, `useQueryParams`, `useLocalStorage` | Fix | Review the notes below if you relied on the old behaviour |
+| Public types exported | Feature | — |
+
+## React 19 is required
+
+`react` moved from `dependencies` to `peerDependencies` (`^19.0.0`). Before 1.0 the library could install its own copy of React, which caused `Invalid hook call` errors. Now it always uses your app's React.
+
+```bash
+pnpm add react@^19 react-dom@^19 @julianfere/hooked@^1
+```
+
+If you can't upgrade React yet, stay on `@julianfere/hooked@0.3`.
+
+## `useAsync`: signal first
+
+The `AbortSignal` is now the **first** parameter of your function. The arguments of `trigger` come after it.
+
+```ts
+// ❌ 0.x
+const { trigger } = useAsync((id: string, signal: AbortSignal) =>
+  fetch(`/api/users/${id}`, { signal })
+);
+
+// ✅ 1.0
+const { trigger } = useAsync((signal, id: string) =>
+  fetch(`/api/users/${id}`, { signal })
+);
+
+trigger("42");
+```
+
+Functions that only take the signal don't change:
+
+```ts
+useAsync((signal) => fetch("/api/config", { signal }));
+```
+
+Functions that don't need cancellation can omit it:
+
+```ts
+useAsync(() => loadSettings());
+```
+
+**Why:** appending the signal at the end caused three problems:
+
+1. If your function didn't declare the signal, the type of `trigger` dropped its last real argument: `useAsync((id: string) => …)` produced a `trigger()` that rejected `trigger(id)`.
+2. Optional parameters became required in `trigger`.
+3. With optional parameters, calling `trigger` with fewer arguments placed the signal into the wrong parameter at runtime.
+
+With the signal first, `trigger` takes exactly the parameters declared after it.
+
+:::tip Finding usages
+Search your codebase for `useAsync(` and check the parameter list of each function. TypeScript reports every call where the first parameter isn't compatible with `AbortSignal`.
+:::
+
+## `useDocumentTitle` is deprecated
+
+React 19 supports rendering [`<title>`](https://react.dev/reference/react-dom/components/title) from any component and hoists it into `<head>`. The hook still works in 1.x and logs a one-time warning outside production. It will be removed in 2.0.
+
+```tsx
+// ❌ Deprecated
+function Inbox({ count }: { count: number }) {
+  useDocumentTitle(`Inbox (${count})`);
+  return <MessageList />;
+}
+
+// ✅ React 19
+function Inbox({ count }: { count: number }) {
+  return (
+    <>
+      <title>{`Inbox (${count})`}</title>
+      <MessageList />
+    </>
+  );
+}
+```
+
+When the component unmounts, React removes its `<title>` and the previous one applies again, which matches the default behaviour of the hook. There is no direct equivalent for `persistOnUnmount: true`. Render the title from a component that stays mounted instead.
+
+## Behaviour fixes
+
+These are not API changes, but they change behaviour you might rely on:
+
+- **`useDebounce`**: `delay={0}` is now respected. Before, `0` fell back to 500 ms.
+- **`useDelay`**: the manual runner returns a cancel function, and pending timers are cleared on unmount.
+- **`useQueryParams`**:
+  - `set({})` removes the query string. Before, it did nothing.
+  - `set` and `clear` keep the URL hash.
+  - `build` skips `null`/`undefined` values instead of throwing, and serializes objects and arrays as JSON.
+  - `get` no longer casts `" "`, `"0x10"`, `"1e5"`, `"007"` or integers beyond `Number.MAX_SAFE_INTEGER` to numbers; they stay strings.
+  - Every mounted instance re-renders on `set`, `clear` and browser navigation.
+- **`useLocalStorage`**: `getItem` returns `null` for values that aren't valid JSON instead of throwing, and `hasItem` returns `true` for items stored as an empty string.
+- **EventContext**: no longer uses `crypto.randomUUID()`, so it works on plain HTTP and older browsers.
+
+## New exported types
+
+```ts
+import type {
+  AsyncFunction,
+  AsyncState,
+  TriggerArgs,
+  UseAsyncOptions,
+} from "@julianfere/hooked";
+
+import type {
+  IEventContext,
+  Publisher,
+  SubscriptionHandler,
+} from "@julianfere/hooked/events";
+```

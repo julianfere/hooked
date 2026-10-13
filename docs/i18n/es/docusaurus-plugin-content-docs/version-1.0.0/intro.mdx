@@ -1,0 +1,60 @@
+---
+id: intro
+sidebar_position: 1
+title: Primeros pasos
+---
+
+# Primeros pasos
+
+`@julianfere/hooked` es una colección de React hooks con tipado estricto, sin dependencias externas más allá de React.
+
+:::info ¿Venís de 0.x?
+1.0 requiere React 19 y tiene cambios incompatibles. Leé la [guía de migración](./migration/v1.mdx).
+:::
+
+## Instalación
+
+```bash
+pnpm add @julianfere/hooked
+```
+
+```bash
+npm install @julianfere/hooked
+```
+
+## Puntos de entrada
+
+El paquete expone dos puntos de entrada:
+
+| Import | Contenido |
+|--------|-----------|
+| `@julianfere/hooked` | `useAsync`, `useDebounce`, `useThrottle`, `useDelay`, `useLocalStorage`, `useQueryParams`, `useDocumentTitle` (deprecado) |
+| `@julianfere/hooked/events` | `factory` (sistema pub/sub con EventContext) |
+
+## Ejemplo rápido
+
+```tsx
+import { useAsync } from "@julianfere/hooked";
+
+function PerfilUsuario({ id }: { id: string }) {
+  const { data, status, trigger } = useAsync(
+    (signal) =>
+      fetch(`/api/usuarios/${id}`, { signal }).then((r) => r.json())
+  );
+
+  if (status === "pending") return <p>Cargando…</p>;
+  if (status === "rejected") return <p>Error al cargar el usuario.</p>;
+
+  return (
+    <div>
+      <h1>{data?.name}</h1>
+      <button onClick={() => trigger()}>Actualizar</button>
+    </div>
+  );
+}
+```
+
+## Requisitos
+
+- React **19+** (peer dependency)
+- TypeScript **5.0+** (recomendado)

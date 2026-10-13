@@ -64,8 +64,16 @@ This project is a collection of React Hooks that I have found useful in my own p
 ### Installation
 
 ```sh
+pnpm add @julianfere/hooked
+# or
 npm i @julianfere/hooked
 ```
+
+### Requirements
+
+- React **19+** (peer dependency)
+
+> **Upgrading from 0.x?** 1.0 has breaking changes: it requires React 19 and `useAsync` now receives the `AbortSignal` as its **first** argument. See the [migration guide](https://hooked.fere.com.ar/docs/migration/v1).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -86,7 +94,7 @@ import { useAsync } from "@julianfere/hooked";
 
 const MyComponent = () => {
   const { data, status, loading, error, trigger, reset } = useAsync(
-    (signal: AbortSignal) =>
+    (signal) =>
       fetch("https://api.example.com/data", { signal }).then((r) => r.json())
   );
 
@@ -104,12 +112,21 @@ const MyComponent = () => {
 // Auto-execute on mount
 const AutoExample = () => {
   const { data, loading } = useAsync(
-    (signal: AbortSignal) =>
+    (signal) =>
       fetch("https://api.example.com/data", { signal }).then((r) => r.json()),
     { immediate: true }
   );
 
   return loading ? <p>Loading...</p> : <pre>{JSON.stringify(data, null, 2)}</pre>;
+};
+
+// Arguments passed to trigger come after the signal
+const UserExample = () => {
+  const { data, trigger } = useAsync((signal, id: string) =>
+    fetch(`https://api.example.com/users/${id}`, { signal }).then((r) => r.json())
+  );
+
+  return <button onClick={() => trigger("42")}>{data?.name ?? "Load user"}</button>;
 };
 ```
 
@@ -119,7 +136,7 @@ const AutoExample = () => {
 const { trigger, reset, status, data, error, loading } = useAsync(fn, options);
 ```
 
-`fn`: The async function to run. Receives an `AbortSignal` as the last argument.
+`fn`: The async function to run. Receives an `AbortSignal` as the **first** argument, followed by the arguments passed to `trigger`: `trigger(a, b)` calls `fn(signal, a, b)`.
 
 **Options**:
 
@@ -279,10 +296,10 @@ const { getItem, setItem, removeItem, hasItem, clear } = useLocalStorage<T>();
 
 | Method | Description |
 |--------|-------------|
-| `getItem(key)` | Returns the typed value or `null` if not set |
+| `getItem(key)` | Returns the typed value, or `null` if it is not set or is not valid JSON |
 | `setItem(key, value)` | Serialises and stores the value |
 | `removeItem(key)` | Removes the key from storage |
-| `hasItem(key)` | Returns `true` if the key exists |
+| `hasItem(key)` | Returns `true` if the key exists, even if its value is an empty string |
 | `clear()` | Removes all keys from storage |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -312,7 +329,7 @@ const BasicExample = () => {
   return (
     <>
       <p>{message}</p>
-      <button onClick={() => { setMessage("Waiting…"); trigger?.(); }}>
+      <button onClick={() => { setMessage("Waiting…"); trigger(); }}>
         Run delay
       </button>
     </>
@@ -331,13 +348,15 @@ const trigger = useDelay(callback, options);
 | `delay` | `number` | `250` | Milliseconds before the callback fires |
 | `manual` | `boolean` | `false` | When `true`, returns a trigger function instead of auto-executing |
 
-**Returned Value**: A trigger function when `manual: true`, otherwise a no-op.
+**Returned Value**: When `manual: true`, a function that schedules the callback and returns a function to cancel that run. Otherwise a no-op. Pending timers are cleared on unmount.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
 ## useDocumentTitle
+
+> **Deprecated:** React 19 supports rendering `<title>` from any component. Use `<title>{title}</title>` instead. This hook will be removed in 2.0.
 
 <h4>Overview</h4>
 <p>Sets <code>document.title</code> declaratively and restores the original title on unmount.</p>
@@ -393,7 +412,7 @@ const SearchPage = () => {
   return (
     <div>
       <input value={q} onChange={(e) => set({ q: e.target.value, page: 1 })} />
-      <button onClick={() => set({ page: page + 1 })}>Next page</button>
+      <button onClick={() => set({ q, page: page + 1 })}>Next page</button>
       <button onClick={clear}>Clear filters</button>
     </div>
   );
@@ -409,9 +428,9 @@ const { get, set, build, clear, pathname, search } = useQueryParams<T>();
 | Method / Property | Description |
 |-------------------|-------------|
 | `get(...keys)` | Returns an object with the requested params, auto-casting to `boolean`, `number`, or parsed JSON |
-| `set(params, url?)` | Pushes updated params to the URL |
+| `set(params, url?)` | Replaces the query string with `params`, keeping the hash. `set({})` removes it |
 | `build(params)` | Returns a query string without navigating |
-| `clear()` | Removes all query params from the URL |
+| `clear()` | Removes all query params from the URL, keeping the hash |
 | `pathname` | Current `location.pathname` |
 | `search` | Current `location.search` |
 

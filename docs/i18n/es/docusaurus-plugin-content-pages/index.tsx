@@ -31,7 +31,7 @@ const hooks = [
   {
     name: "useDocumentTitle",
     color: "var(--hooked-sky)",
-    description: "Establece y restaura el título del documento de forma declarativa.",
+    description: "Deprecado: usá <title> de React 19. Se elimina en 2.0.",
   },
   {
     name: "useLocalStorage",

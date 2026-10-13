@@ -41,16 +41,20 @@ const config: Config = {
         docs: {
           sidebarPath: "./sidebars.ts",
           editUrl: "https://github.com/julianfere/hooked/edit/main/docs/",
-          lastVersion: "0.3.0",
+          lastVersion: "1.0.0",
           versions: {
             current: {
               label: "Next (Unreleased)",
               path: "next",
               banner: "unreleased",
             },
+            "1.0.0": {
+              label: "1.0.0",
+              path: "/",
+              badge: true,
+            },
             "0.3.0": {
               label: "0.3.0",
-              path: "/",
               badge: true,
             },
             "0.2.0": {

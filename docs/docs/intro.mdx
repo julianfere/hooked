@@ -8,14 +8,18 @@ title: Getting Started
 
 `@julianfere/hooked` is a collection of type-safe, focused React hooks with zero dependencies beyond React itself.
 
+:::info Upgrading from 0.x?
+1.0 requires React 19 and has breaking changes. Read the [migration guide](./migration/v1.mdx).
+:::
+
 ## Installation
 
 ```bash
-npm install @julianfere/hooked
+pnpm add @julianfere/hooked
 ```
 
 ```bash
-yarn add @julianfere/hooked
+npm install @julianfere/hooked
 ```
 
 ## Entry points
@@ -24,7 +28,7 @@ The package ships two entry points:
 
 | Import | Contents |
 |--------|----------|
-| `@julianfere/hooked` | `useAsync`, `useDebounce`, `useThrottle`, `useDelay`, `useDocumentTitle`, `useLocalStorage`, `useQueryParams` |
+| `@julianfere/hooked` | `useAsync`, `useDebounce`, `useThrottle`, `useDelay`, `useLocalStorage`, `useQueryParams`, `useDocumentTitle` (deprecated) |
 | `@julianfere/hooked/events` | `factory` (EventContext pub/sub system) |
 
 ## Quick example
@@ -34,7 +38,7 @@ import { useAsync } from "@julianfere/hooked";
 
 function UserProfile({ id }: { id: string }) {
   const { data, status, trigger } = useAsync(
-    (signal: AbortSignal) =>
+    (signal) =>
       fetch(`/api/users/${id}`, { signal }).then((r) => r.json())
   );
 
@@ -52,5 +56,5 @@ function UserProfile({ id }: { id: string }) {
 
 ## Requirements
 
-- React **18.2+**
+- React **19+** (peer dependency)
 - TypeScript **5.0+** (recommended)

@@ -7,6 +7,23 @@ sidebar_position: 5
 
 # useDocumentTitle
 
+:::warning Deprecado
+`useDocumentTitle` está deprecado y se va a eliminar en 2.0. React 19 permite renderizar [`<title>`](https://react.dev/reference/react-dom/components/title) desde cualquier componente y lo sube al `<head>`. El hook muestra un aviso una sola vez fuera de producción.
+
+```tsx
+function PaginaProducto({ nombre }: { nombre: string }) {
+  return (
+    <>
+      <title>{`${nombre} — Mi Tienda`}</title>
+      <h1>{nombre}</h1>
+    </>
+  );
+}
+```
+
+Mirá la [guía de migración](../migration/v1.mdx#usedocumenttitle-is-deprecated).
+:::
+
 Establece `document.title` de forma declarativa y restaura el título original al desmontar (a menos que se opte por no hacerlo).
 
 ## Firma

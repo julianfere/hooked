@@ -1,0 +1,61 @@
+---
+id: use-document-title
+title: useDocumentTitle
+sidebar_label: useDocumentTitle
+sidebar_position: 5
+---
+
+# useDocumentTitle
+
+:::warning Deprecated
+`useDocumentTitle` is deprecated and will be removed in 2.0. React 19 supports rendering [`<title>`](https://react.dev/reference/react-dom/components/title) from any component and hoists it into `<head>`. The hook logs a one-time warning outside production.
+
+```tsx
+function ProductPage({ name }: { name: string }) {
+  return (
+    <>
+      <title>{`${name} — My Shop`}</title>
+      <h1>{name}</h1>
+    </>
+  );
+}
+```
+
+See the [migration guide](../migration/v1.mdx#usedocumenttitle-is-deprecated).
+:::
+
+Sets `document.title` declaratively and restores the original title on unmount (unless opted out).
+
+## Signature
+
+```ts
+function useDocumentTitle(title: string, persistOnUnmount?: boolean): void
+```
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `title` | `string` | — | The title to set |
+| `persistOnUnmount` | `boolean` | `false` | When `true`, the title is not restored when the component unmounts |
+
+## Behaviour
+
+- Sets `document.title` immediately on each render when `title` changes.
+- Captures the original title in a `ref` on mount.
+- Restores the original title on unmount, unless `persistOnUnmount` is `true`.
+
+## Example
+
+```tsx
+import { useDocumentTitle } from "@julianfere/hooked";
+
+function ProductPage({ name }: { name: string }) {
+  useDocumentTitle(`${name} — My Shop`);
+  return <h1>{name}</h1>;
+}
+```
+
+:::note
+This hook interacts with `document.title` which is not available in server-side rendering environments. In an SSR setup, ensure the hook only runs on the client.
+:::

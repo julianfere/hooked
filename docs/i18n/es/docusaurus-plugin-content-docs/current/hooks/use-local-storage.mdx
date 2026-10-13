@@ -43,11 +43,15 @@ storage.setItem("tema", "azul");          // ❌ Error de tipos
 
 | Método | Descripción |
 |--------|-------------|
-| `getItem(key)` | Devuelve el valor tipado o `null` si no está definido |
+| `getItem(key)` | Devuelve el valor tipado, o `null` si no está definido o no es JSON válido |
 | `setItem(key, value)` | Serializa y almacena el valor |
 | `removeItem(key)` | Elimina la clave del storage |
-| `hasItem(key)` | Devuelve `true` si la clave existe |
+| `hasItem(key)` | Devuelve `true` si la clave existe, aunque su valor sea un string vacío |
 | `clear()` | Elimina todas las claves del storage |
+
+:::note No es reactivo
+Los métodos leen y escriben `localStorage` directamente. Llamar a `setItem` **no** vuelve a renderizar los componentes. Guardá el valor en el estado si la UI depende de él.
+:::
 
 ## Manejo de errores
 
