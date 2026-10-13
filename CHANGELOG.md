@@ -1,5 +1,83 @@
 # @julianfere/hooked
 
+## 1.0.0
+
+### Major Changes
+
+- ceb0f12: **React 19 is now required.** `react` moved from `dependencies` to `peerDependencies` with range `^19.0.0`; React 18 is no longer supported.
+  
+  Previously `react` was declared as a regular dependency, which could install a second copy of React in consumer apps and cause "Invalid hook call" errors. Now the library always uses the host app's React.
+  
+  ```bash
+  pnpm add react@^19 react-dom@^19
+  ```
+- ceb0f12: **`useAsync`: the `AbortSignal` is now the first argument of `fn`.**
+  
+  `trigger(...args)` forwards its arguments after the signal: `fn(signal, ...args)`.
+  
+  ```ts
+  // Before (0.x)
+  const { trigger } = useAsync((id: string, signal: AbortSignal) =>
+    fetch(`/users/${id}`, { signal })
+  );
+  
+  // After (1.0)
+  const { trigger } = useAsync((signal, id: string) =>
+    fetch(`/users/${id}`, { signal })
+  );
+  
+  trigger("42");
+  ```
+  
+  Why: appending the signal at the end broke in several ways:
+  
+  - If `fn` did not declare the signal, the type of `trigger` dropped its last real argument, so `useAsync((id: string) => ...)` produced a `trigger()` that rejected `trigger(id)`.
+  - Optional parameters became required in `trigger`.
+  - With optional parameters, calling `trigger` with fewer arguments placed the signal into the wrong parameter at runtime.
+  
+  With the signal first, `trigger` takes exactly the parameters declared after it, optional parameters stay optional, and the signal always lands in the same place. Functions that don't need cancellation can omit the parameter entirely: `useAsync(() => fetchConfig())`.
+  
+  The `AsyncFunction` and `TriggerArgs` types are exported for wrappers.
+
+### Minor Changes
+
+- ceb0f12: `useDocumentTitle` is deprecated and will be removed in 2.0. React 19 supports rendering `<title>` from any component and hoists it into `<head>`:
+  
+  ```tsx
+  // Before
+  useDocumentTitle(`Inbox (${count})`);
+  
+  // After
+  return (
+    <>
+      <title>{`Inbox (${count})`}</title>
+      ...
+    </>
+  );
+  ```
+  
+  The hook keeps working and logs a one-time warning outside production.
+- ceb0f12: EventContext:
+  
+  - The provider renders `<Context value>` (React 19) instead of `<Context.Provider>`.
+  - Subscription ids use an incremental counter instead of `crypto.randomUUID()`, which is unavailable outside secure contexts (plain HTTP) and in older browsers.
+  - Clearer error when the event hook is used outside its provider.
+- ceb0f12: Public types are now exported: `AsyncState` and `UseAsyncOptions` from `@julianfere/hooked`, and `IEventContext`, `Publisher` and `SubscriptionHandler` from `@julianfere/hooked/events`.
+
+### Patch Changes
+
+- ceb0f12: Bug fixes:
+  
+  - `useDebounce`: a `delay` of `0` is now respected (it used to fall back to 500 ms).
+  - `useDelay`: timers scheduled with the manual runner are cleared on unmount; the runner now always returns a cancel function and is stable between renders.
+  - `useQueryParams`:
+    - Rewritten on top of `useSyncExternalStore`; every mounted instance re-renders on `set`, `clear` and browser navigation (no more module-level listener array).
+    - `build` skips `null`/`undefined` values instead of throwing, and serializes objects/arrays as JSON so they round-trip with `get`.
+    - `set({})` removes the query string instead of doing nothing.
+    - `set` and `clear` keep the URL hash.
+    - `get` no longer casts whitespace, hex (`0x10`), exponent (`1e5`), leading-zero (`007`) or unsafe integer values to numbers.
+  - `useLocalStorage`: `getItem` returns `null` for values that are not valid JSON instead of throwing, and `hasItem` reports items stored as an empty string as existing.
+
 ## 0.3.0
 
 ### Minor Changes
